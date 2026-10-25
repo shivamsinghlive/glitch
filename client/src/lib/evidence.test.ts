@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { COACH_EVIDENCE, EVIDENCE, evidenceFor, evidencePromptBlock } from "./evidence";
 
-const LEVELS = ["guideline", "meta-analysis", "rct", "cohort", "cross-sectional", "review"];
+const LEVELS = ["guideline", "meta-analysis", "rct", "cohort", "cross-sectional", "review", "preclinical"];
 
 describe("evidence library", () => {
   it("has unique kebab-case ids", () => {

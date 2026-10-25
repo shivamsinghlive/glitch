@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { LIFE_STAGES, NO_CYCLE_OPTIONS, NoCycleReason } from "@/lib/lifeStage";
 import type { HormoneContext } from "@/lib/hormones";
 import HormoneConsent from "@/components/HormoneConsent";
-import QuickMenopauseSetup from "@/components/QuickMenopauseSetup";
+import QuickStart from "@/components/QuickStart";
 
 const GOALS: { id: FitnessGoal; label: string; desc: string; emoji: string }[] = [
   { id: "lose_weight",      label: "Lose Weight",     desc: "Burn fat, feel lighter",         emoji: "🔥" },
@@ -186,7 +186,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
     ? ["Your Info", "Your Goal", "Equipment", "Workout Style", "Women's Health", "Ready!"]
     : ["Your Info", "Your Goal", "Equipment", "Workout Style", "Ready!"];
 
-  if (quickMeno) return <QuickMenopauseSetup onDone={onDone} onBack={() => setQuickMeno(false)} />;
+  if (quickMeno) return <QuickStart onDone={onDone} onBack={() => setQuickMeno(false)} />;
 
   return (
     <div className="flex flex-col min-h-full" style={{ background: "var(--app-bg)", position: "relative", overflow: "hidden" }}>
@@ -219,10 +219,10 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
           <div className="flex flex-col gap-3 flex-1 animate-fade-up animate-fade-up-delay-2">
             <button onClick={() => setQuickMeno(true)}
               style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 16, border: "2px solid color-mix(in oklch, var(--accent) 35%, transparent)", background: "color-mix(in oklch, var(--accent) 8%, var(--card-bg))", textAlign: "left" }}>
-              <span style={{ fontSize: 28 }}>🌗</span>
+              <span style={{ fontSize: 28 }}>💜</span>
               <span>
-                <span style={{ display: "block", fontSize: 15, fontWeight: 800, color: "var(--ink)", fontFamily: "'DM Sans', sans-serif" }}>Here for menopause support?</span>
-                <span style={{ display: "block", fontSize: 12.5, color: "var(--txt-muted)", fontFamily: "'DM Sans', sans-serif" }}>1-minute setup, then just talk to Glitchy →</span>
+                <span style={{ display: "block", fontSize: 15, fontWeight: 800, color: "var(--ink)", fontFamily: "'DM Sans', sans-serif" }}>Quick start for women</span>
+                <span style={{ display: "block", fontSize: 12.5, color: "var(--txt-muted)", fontFamily: "'DM Sans', sans-serif" }}>Periods, pregnancy, postpartum or menopause: 1-minute setup →</span>
               </span>
             </button>
             <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 700, color: "var(--ink)" }}>Let's get to know you</h1>

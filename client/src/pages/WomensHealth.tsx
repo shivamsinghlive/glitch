@@ -38,7 +38,7 @@ const FITNESS_GUIDANCE: Record<CyclePhase, { types: string[]; tip: string }> = {
 };
 
 const SYMPTOM_LABELS = ["Mood", "Energy", "Stress", "Bloating", "Cramps", "Cravings", "Sleep Quality"];
-const SYMPTOM_KEYS: (keyof Omit<CycleSymptomEntry, "date" | "cycleDay" | "notes">)[] = ["mood", "energy", "stress", "bloating", "cramps", "cravings", "sleepQuality"];
+const SYMPTOM_KEYS: (keyof Omit<CycleSymptomEntry, "date" | "cycleDay" | "notes" | "workout">)[] = ["mood", "energy", "stress", "bloating", "cramps", "cravings", "sleepQuality"];
 const SYMPTOM_COLORS = ["oklch(0.72 0.08 148)", "oklch(0.78 0.10 75)", "var(--accent)", "oklch(0.62 0.10 200)", "oklch(0.68 0.09 25)", "oklch(0.75 0.12 55)", "oklch(0.65 0.08 280)"];
 
 // ── Cycle Ring ────────────────────────────────────────────────

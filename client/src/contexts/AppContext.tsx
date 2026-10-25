@@ -11,6 +11,7 @@ import React, {
   ReactNode,
 } from "react";
 import { LIFE_STAGES, type NoCycleReason } from "@/lib/lifeStage";
+import { generateDemoCheckIns } from "@/lib/phasePatterns";
 import { ovulationTrackingAllowed, type HormoneContext } from "@/lib/hormones";
 import type { WhoopData } from "@/lib/whoop/types";
 import { generateDemoWhoop, demoSeedFrom } from "@/lib/whoop/demoData";
@@ -174,6 +175,8 @@ export interface CycleSymptomEntry {
   cramps: number;     // 1-5
   cravings: number;   // 1-5
   sleepQuality: number; // 1-5
+  /** How strong the workout felt, 1-5 (optional; only on days she trained) */
+  workout?: number;
   notes: string;
 }
 
@@ -296,6 +299,8 @@ interface AppContextType extends AppState {
   addWeightEntry: (e: WeightEntry) => void;
   addWellnessEntry: (e: WellnessEntry) => void;
   addCycleSymptomEntry: (e: CycleSymptomEntry) => void;
+  /** Demo only: replace the check-in log with 12 weeks of synthetic check-ins for this profile */
+  loadDemoCheckIns: () => void;
   logPeriodStart: (date: string) => void;
   addSupplement: (s: Supplement) => void;
   removeSupplement: (id: string) => void;
@@ -427,6 +432,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addCycleSymptomEntry = useCallback((e: CycleSymptomEntry) => {
     setCycleSymptomLog((prev) => [...prev.filter((x) => x.date !== e.date), e]);
   }, []);
+
+  const loadDemoCheckIns = useCallback(() => {
+    const wh = profile?.womensHealth;
+    if (!wh?.lastPeriodDate) return;
+    setCycleSymptomLog(generateDemoCheckIns({ lastPeriodDate: wh.lastPeriodDate, cycleLength: wh.cycleLength, gapDays: 6, phaseOf: (d) => getCyclePhase(d, wh.cycleLength) }));
+  }, [profile]);
 
   const logPeriodStart = useCallback((date: string) => {
     setPeriodLog((prev) => [...prev.filter((p) => p.startDate !== date), { startDate: date }]);
@@ -680,7 +691,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       hotFlashLog, addHotFlash, removeHotFlash, mrsLog, addMrs, updateWomensHealth,
       supplementTaken, markSupplementTaken, undoSupplementTaken, bpLog, addBp, moodLog, addMood,
       setProfile, addMeal, setSteps, toggleExercise, addWeightEntry,
-      addWellnessEntry, addCycleSymptomEntry, logPeriodStart,
+      addWellnessEntry, addCycleSymptomEntry, loadDemoCheckIns, logPeriodStart,
       addSupplement, removeSupplement, refreshExercisePlan,
       generateWeeklyPlan, updatePreferences, updateWeeklyPlan, toggleExerciseCompletion,
       addCustomExerciseToDay, removeExerciseFromDay, editExerciseInPlan,

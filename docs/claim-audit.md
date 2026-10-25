@@ -1,6 +1,6 @@
 # Claim audit: app wording vs. verified evidence
 
-We checked every health claim in Glitch against PubMed. Each PMID below was retrieved with the PubMed (NCBI) tools during the audit. Titles, journals and years were copied from the PubMed record, not written from memory. The full library lives in `client/src/lib/evidence.ts` (28 claims, 44 PMIDs), and `evidence.test.ts` checks that every citation has a numeric PMID with a matching PubMed URL and that app copy stays aligned. Where a claim appears in the UI, a muted "source ↗" link opens its PubMed record (`EvidenceSource.tsx`).
+We checked every health claim in Glitch against PubMed. Each PMID below was retrieved with the PubMed (NCBI) tools during the audit. Titles, journals and years were copied from the PubMed record, not written from memory. The full library lives in `client/src/lib/evidence.ts` (41 claims, 66 PMIDs), and `evidence.test.ts` checks that every citation has a numeric PMID with a matching PubMed URL and that app copy stays aligned. Where a claim appears in the UI, a muted "source ↗" link opens its PubMed record (`EvidenceSource.tsx`).
 
 Audit date: 2026-10-24. The table covers the 13 claims where the app said more than the evidence supports, or got a detail wrong.
 
@@ -30,8 +30,29 @@ These claims already matched the evidence, and now carry source links:
 - Supplement-timing rules: levothyroxine (21595516, 28153426), calcium and iron (38969940), vitamin D with fat (25441954).
 
 ## How the coach uses this
-The coach prompt includes a trimmed list of the 10 most-used verified claims, each with its PubMed URL (about 250 tokens; see `COACH_EVIDENCE` in `evidence.ts`). The coach is told to use these URLs only when they match its claim. Separately, the existing domain whitelist still drops citations from untrusted sites.
+The coach prompt includes a trimmed list of the 14 most-used verified claims, each with its PubMed URL (about 380 tokens; see `COACH_EVIDENCE` in `evidence.ts`). The coach is told to use these URLs only when they match its claim. Separately, the existing domain whitelist still drops citations from untrusted sites.
 
 ## Known limits
 - Claims are checked against abstracts, plus PMC full text where it was available (SWAN durations, STRAW+10, MRS). Guideline tables without PMC full text (2025 blood-pressure guideline, GAD-2 cut-off) are marked as unverified rather than assumed correct.
 - The personal hot-flash trigger analysis (`hotFlashTriggers`) is maintained separately. It reports associations in the user's own logs, not causes.
+
+## Pivot additions (all life stages)
+Added 2026-10-25 when the app widened from menopause to every life stage (cycle, pregnancy, postpartum, menopause). Every PMID was retrieved with the PubMed tools and its title, journal and year copied from the record. Where the suggested claim was stronger than the evidence, we rewrote the claim to match the papers.
+
+| id | Claim (as in `evidence.ts`) | PMIDs | Strength of evidence |
+|---|---|---|---|
+| `cycle-phase-performance-small` | Performance may be trivially lower in the early follicular phase; effect is small and variable, so go by individual response. | 32661839 | Meta-analysis of 78 studies; trivial effect (ES −0.06), evidence quality rated low. |
+| `cycle-phase-strength-no-clear-effect` | No consistent evidence that cycle phase changes strength, hypertrophy or muscle protein synthesis; phase-based strength programming isn't well supported. | 37033884, 31677121, 39630025 | Umbrella review + systematic review (findings conflicting, small samples) + one small RCT (n=12). Moderate-to-low. |
+| `luteal-energy-intake-higher` | Women eat a little more in the luteal phase, ~170 kcal/day in pooled studies. | 39008822 | Meta-analysis, 15 datasets, 330 women; methods inconsistent. Cravings were not assessed, so the claim omits them. |
+| `premenstrual-mood-symptoms` | PMDD affects ~3% when confirmed by prospective tracking (~8% provisional). | 38199397 | Meta-analysis, 44 studies, 50,659 participants; very high heterogeneity. |
+| `perinatal-depression-common` | Perinatal depression affects up to ~1 in 7 (USPSTF); global reviews estimate ~17% postpartum. | 30747971, 34671011, 30114665 | Guideline + two large meta-analyses (565 and 58 studies). Strong. |
+| `postpartum-depression-screening` | ACOG 2023 recommends perinatal depression/anxiety screening; USPSTF recommends counselling for women at increased risk. | 37486660, 30747971 | Guidelines (USPSTF grade B). Strong. |
+| `exercise-in-pregnancy-recommended` | Guidelines recommend regular activity in pregnancy and postpartum; moderate benefits, no identified harms. | 30337460, 33239350 | GRADE-based national guideline + WHO guideline. Strong. |
+| `women-adverse-drug-reactions` | Women have ADRs nearly twice as often; higher drug levels in women (76 of 86 drugs) strongly predicted more side effects. | 32503637 | Literature analysis (not a formal meta-analysis). Moderate. |
+| `women-underrepresented-trials` | Female animals long left out of research (5.5:1 male-only in neuroscience); women still underrepresented vs disease burden in some US trial fields (2000–2020). | 20620164, 34143192 | Bibliometric review + cross-sectional study of 20,020 trials. Moderate. Note: the same study found men underrepresented in other fields. |
+| `zolpidem-sex-dose` | Women clear zolpidem more slowly (~35% lower clearance); FDA halved the women's dose in 2013; some researchers dispute the need. | 30939589, 24203450 | PK trials + review. The FDA action is documented in 30939589 (which argues against it); the original FDA communication itself is not a PubMed record. |
+| `rete-ovarii-function` | In mice, the rete ovarii is a secreting tubular structure whose fluid flows toward the ovary; not yet studied in humans. | 40105200 | Single preclinical (mouse) study, eLife 2025. New `preclinical` evidence level added for this. The PubMed title has "rete ovarii" in italics, which the API strips; restored in the stored title. |
+| `exercise-reduces-depression` | Exercise moderately reduces depressive symptoms; walking/jogging, yoga and strength training among the best. | 38355154 | Network meta-analysis, 218 RCTs, 14,170 participants; CINeMA confidence low to very low (risk of bias). |
+| `self-compassion-health-behaviour` | Self-compassion is modestly linked with healthier habits, and in experiments increased motivation to improve after a setback; early, mostly correlational. | 25243717, 22645164 | Small meta-analysis of the authors' own cross-sectional samples (r≈.25) + lab experiments. Weak; does not directly show "restarting after lapses". |
+
+**Couldn't verify / changed from the brief:** no claim was skipped. Two were narrowed: the luteal claim drops "food cravings" (the meta-analysis covers energy intake only), and the self-compassion claim does not say it helps people restart after a lapse (no solid PubMed source found for that specific outcome). The rete ovarii paper is 2025 (eLife), not 2024, and is mouse-only. Coach prompt now carries 14 entries (block ~1,530 characters, under the 1,600 test limit).

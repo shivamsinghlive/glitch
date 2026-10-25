@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { AppProvider, useApp, bodyKind } from "./contexts/AppContext";
+import { AppProvider, useApp } from "./contexts/AppContext";
 import BottomNav from "./components/BottomNav";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
@@ -18,7 +18,7 @@ import Fitness from "./pages/Fitness";
 import FormCoach from "./pages/FormCoach";
 import WomensHealth from "./pages/WomensHealth";
 import Progress from "./pages/Progress";
-import MenopauseHome from "./pages/MenopauseHome";
+import WomenHome from "./pages/WomenHome";
 import CoachChat, { CoachFab } from "./components/CoachChat";
 import { ThemeSync, Confetti } from "./components/Fun";
 
@@ -56,14 +56,15 @@ function AppShell() {
 
   // Cycle tab covers life stages too (pregnancy, menopause…), so show it for all female profiles
   const isFemale = profile.biologicalSex === "female" && !!profile.womensHealth;
-  const hasBodyHome = bodyKind(profile) !== "none";
+  // Every woman gets a "My body" home (cycle, pregnancy, postpartum, menopause…)
+  const hasBodyHome = isFemale;
   const menopauseMode = hasBodyHome && homeView === "body";
 
   const pages: Record<string, React.ReactNode> = {
     home: (
       <>
         {hasBodyHome && <HomeSwitch value={homeView} onChange={setHomeView} />}
-        {menopauseMode ? <MenopauseHome onTalk={talk} /> : <Dashboard onAskCoach={askCoach} />}
+        {menopauseMode ? <WomenHome onTalk={talk} /> : <Dashboard onAskCoach={askCoach} />}
       </>
     ),
     log:      <LogFood />,
