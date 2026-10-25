@@ -10,6 +10,7 @@ import { Camera, Plus, CheckCircle2, X, Loader2, AlertCircle } from "lucide-reac
 import { nanoid } from "nanoid";
 import { toast } from "sonner";
 import { analyzeFoodImage, lookupIngredient, FoodAnalysis, IngredientNutrition } from "@/lib/aiService";
+import { AiBlockedError, AiConsentNeededError, grantPhotoConsent } from "@/lib/aiPrivacy";
 
 type MealType = "Breakfast" | "Lunch" | "Dinner" | "Snack";
 const MEAL_TYPES: MealType[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
@@ -27,6 +28,9 @@ export default function LogFood() {
   const [addonLoading, setAddonLoading] = useState(false);
   const [logged, setLogged] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [manual, setManual] = useState(false);
+  const [needConsent, setNeedConsent] = useState(false);
+  const [form, setForm] = useState({ name: "", calories: "", protein: "", carbs: "", fats: "" });
 
   // Convert file to base64 data URL for AI vision
   function fileToBase64(file: File): Promise<string> {
@@ -51,14 +55,36 @@ export default function LogFood() {
     try {
       const base64 = await fileToBase64(file);
       setPhotoBase64(base64);
-      const result = await analyzeFoodImage(base64);
-      setAnalyzed(result);
+      await analyze(base64);
     } catch (err) {
-      console.error("Food analysis failed:", err);
-      setAnalyzeError("AI analysis failed. Please try again or enter details manually.");
+      console.error("Reading the photo failed:", err);
+      setAnalyzeError("We couldn't read that photo. Try another one or type the meal in.");
     } finally {
       setAnalyzing(false);
     }
+  }
+
+  async function analyze(base64: string) {
+    setAnalyzing(true);
+    setNeedConsent(false);
+    setAnalyzeError(null);
+    try {
+      setAnalyzed(await analyzeFoodImage(base64));
+    } catch (err) {
+      if (err instanceof AiConsentNeededError) setNeedConsent(true);
+      else if (err instanceof AiBlockedError) setAnalyzeError("The AI is turned off, so we can't analyse photos. Type the meal in instead, or turn the AI on under Progress, then Your data & privacy.");
+      else setAnalyzeError("We couldn't analyse that photo reliably, so we haven't guessed. Please type the meal in.");
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
+  function submitManual() {
+    const n = (v: string) => Math.max(0, Number(v) || 0);
+    if (!form.name.trim() || n(form.calories) <= 0) return toast.error("Add a name and the calories.");
+    setAnalyzed({ name: form.name.trim().slice(0, 80), calories: n(form.calories), protein: n(form.protein), carbs: n(form.carbs), fats: n(form.fats), fiber: 0, omega3: 0, confidence: "manual", notes: "Entered by you" });
+    setAnalyzeError(null);
+    setNeedConsent(false);
   }
 
   async function handleAddAddon() {
@@ -124,10 +150,14 @@ export default function LogFood() {
     setAddons([]);
     setAddon("");
     setLogged(false);
+    setManual(false);
+    setNeedConsent(false);
+    setForm({ name: "", calories: "", protein: "", carbs: "", fats: "" });
   }
 
   const confidenceBadge = analyzed
-    ? analyzed.confidence === "high"   ? { label: "High confidence", color: "oklch(0.72 0.08 148)" }
+    ? analyzed.confidence === "manual" ? { label: "Entered by you", color: "oklch(0.72 0.08 148)" }
+    : analyzed.confidence === "high"   ? { label: "High confidence", color: "oklch(0.72 0.08 148)" }
     : analyzed.confidence === "medium" ? { label: "Medium confidence", color: "oklch(0.78 0.10 75)" }
     :                                    { label: "Low confidence — verify", color: "var(--accent)" }
     : null;
@@ -140,7 +170,7 @@ export default function LogFood() {
           Log a Meal
         </h1>
         <p style={{ fontSize: 13, color: "var(--txt-muted)", marginTop: 4, fontFamily: "'DM Sans', sans-serif" }}>
-          Take a photo — AI will identify your food and calculate nutrition.
+          Take a photo and the AI estimates the nutrition, or type the meal in yourself.
         </p>
       </div>
 
@@ -156,7 +186,7 @@ export default function LogFood() {
                 borderRadius: 999,
                 border: mealType === t ? "none" : "1.5px solid var(--line)",
                 background: mealType === t ? "var(--accent)" : "var(--card-bg)",
-                color: mealType === t ? "white" : "var(--ink)",
+                color: mealType === t ? "var(--on-accent)" : "var(--ink)",
                 fontSize: 13,
                 fontWeight: 500,
                 fontFamily: "'DM Sans', sans-serif",
@@ -171,7 +201,7 @@ export default function LogFood() {
         </div>
 
         {/* Camera / Upload area */}
-        {!photoUrl && (
+        {!photoUrl && !manual && (
           <div
             className="animate-fade-up animate-fade-up-delay-1"
             onClick={() => fileRef.current?.click()}
@@ -216,11 +246,14 @@ export default function LogFood() {
             <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhoto} />
           </div>
         )}
+        {!photoUrl && !manual && (
+          <button onClick={() => setManual(true)} style={{ border: "none", background: "transparent", color: "var(--ink)", fontWeight: 700, fontSize: 13, textDecoration: "underline", padding: 6 }}>No photo? Type the meal in instead</button>
+        )}
 
         {/* Photo preview + analysis */}
-        {photoUrl && !logged && (
+        {(photoUrl || manual) && !logged && (
           <div className="flex flex-col gap-4 animate-fade-up">
-            <div style={{ position: "relative" }}>
+            {photoUrl && <div style={{ position: "relative" }}>
               <img
                 src={photoUrl}
                 alt="Food"
@@ -266,7 +299,35 @@ export default function LogFood() {
                   </p>
                 </div>
               )}
-            </div>
+            </div>}
+
+            {/* Consent for this photo (chat-only privacy mode) */}
+            {needConsent && photoBase64 && (
+              <div role="alert" style={{ padding: 14, borderRadius: 14, background: "var(--surface-2)", border: "1px solid var(--line)" }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", fontFamily: "'DM Sans', sans-serif" }}>Send this photo to the AI?</p>
+                <p style={{ fontSize: 12, color: "var(--txt-muted)", marginTop: 3, lineHeight: 1.45, fontFamily: "'DM Sans', sans-serif" }}>Photos are not covered by chat-only mode. This one photo goes to the AI to identify the food and is not stored. You can also type the meal in.</p>
+                <div className="flex gap-2" style={{ marginTop: 10 }}>
+                  <button onClick={() => { grantPhotoConsent(); analyze(photoBase64); }} style={{ flex: 1, padding: "10px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--on-accent)", fontWeight: 700, fontSize: 13 }}>Send this photo</button>
+                  <button onClick={() => { setNeedConsent(false); setManual(true); }} style={{ flex: 1, padding: "10px", borderRadius: 12, border: "1.5px solid var(--line)", background: "var(--card-bg)", color: "var(--ink)", fontWeight: 700, fontSize: 13 }}>Type it in</button>
+                </div>
+              </div>
+            )}
+
+            {/* Manual entry (also the fallback whenever the AI can't help) */}
+            {manual && !analyzed && (
+              <div style={{ padding: 14, borderRadius: 14, background: "var(--card-bg)", border: "1px solid var(--line)" }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "var(--ink)", fontFamily: "'DM Sans', sans-serif" }}>Type your meal in</p>
+                <div className="flex flex-col gap-2" style={{ marginTop: 8 }}>
+                  {([["name", "What did you eat?", "text"], ["calories", "Calories (kcal)", "number"], ["protein", "Protein (g)", "number"], ["carbs", "Carbs (g)", "number"], ["fats", "Fat (g)", "number"]] as const).map(([k, label, type]) => (
+                    <label key={k} style={{ fontSize: 12, color: "var(--txt-muted)", fontFamily: "'DM Sans', sans-serif" }}>{label}
+                      <input id={`manual-${k}`} type={type} inputMode={type === "number" ? "decimal" : undefined} min={0} value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                        style={{ display: "block", width: "100%", marginTop: 3, padding: "9px 11px", borderRadius: 10, border: "1.5px solid var(--line)", background: "var(--app-bg)", color: "var(--ink)", fontSize: 14 }} />
+                    </label>
+                  ))}
+                </div>
+                <button onClick={submitManual} style={{ width: "100%", marginTop: 12, padding: "11px", borderRadius: 12, border: "none", background: "var(--accent)", color: "var(--on-accent)", fontWeight: 700, fontSize: 14 }}>Continue</button>
+              </div>
+            )}
 
             {/* Error state */}
             {analyzeError && (
@@ -281,9 +342,10 @@ export default function LogFood() {
                 }}
               >
                 <AlertCircle size={18} style={{ color: "var(--accent)", flexShrink: 0, marginTop: 1 }} />
-                <p style={{ fontSize: 13, color: "oklch(0.84 0.1 38)", fontFamily: "'DM Sans', sans-serif" }}>
-                  {analyzeError}
-                </p>
+                <div>
+                  <p style={{ fontSize: 13, color: "oklch(0.84 0.1 38)", fontFamily: "'DM Sans', sans-serif" }}>{analyzeError}</p>
+                  {!manual && <button onClick={() => setManual(true)} style={{ marginTop: 8, border: "none", background: "transparent", color: "var(--ink)", fontWeight: 700, fontSize: 13, textDecoration: "underline", padding: 0 }}>Type the meal in</button>}
+                </div>
               </div>
             )}
 
@@ -444,7 +506,7 @@ export default function LogFood() {
                     padding: "16px",
                     borderRadius: 18,
                     background: "var(--accent)",
-                    color: "white",
+                    color: "var(--on-accent)",
                     fontWeight: 700,
                     fontSize: 16,
                     fontFamily: "'DM Sans', sans-serif",

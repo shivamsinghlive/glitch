@@ -88,3 +88,19 @@ describe("vague meal follow-ups", () => {
     expect(p).toMatch(/ONE round of follow-ups/);
   });
 });
+
+import { buildSystemPrompt as bsp } from "./coachAgent";
+describe("privacy mode prompt", () => {
+  const base = { firstName: "Maya", goal: "feel better", conditions: ["hypertension"], todayMeals: [{ name: "oats", type: "Breakfast", calories: 300, protein: 10 }], menopause: { stage: "Early transition", flashesToday: 2, nightSweatNights14: 4 }, hormones: "on HRT", localTime: "Sunday 9:00 AM" };
+  it("full mode includes the health summary", () => {
+    const p = bsp(base);
+    expect(p).toContain("Maya");
+    expect(p).toContain("hypertension");
+    expect(p).toContain("on HRT");
+  });
+  it("minimal mode leaks none of it", () => {
+    const p = bsp({ ...base, minimal: true });
+    for (const secret of ["Maya", "hypertension", "oats", "Early transition", "on HRT"]) expect(p).not.toContain(secret);
+    expect(p).toContain("NOT to share");
+  });
+});

@@ -26,3 +26,58 @@ describe("detector evaluation on simulated ground truth", () => {
     expect(r.within2Days).toBeGreaterThan(0.8);
   });
 });
+
+import { evaluateSensorRobustness } from "./detectorEvaluation";
+describe("sensor bias stress test", () => {
+  it("a constant offset changes nothing; extra noise lowers precision", () => {
+    const r = evaluateSensorRobustness();
+    const ref = r[0], hi = r[1], lo = r[2], noisy = r[r.length - 1];
+    expect(hi.precision).toBe(ref.precision);
+    expect(lo.recall).toBe(ref.recall);
+    expect(noisy.precision).toBeLessThan(ref.precision);
+    expect(noisy.falseAlarmRate).toBeGreaterThan(ref.falseAlarmRate);
+  });
+});
+
+import { analyzeNightSweats, analyzeOvulation, evaluateTriggers } from "./detectorEvaluation";
+import { evaluatePlanner, evaluateRetrieval } from "./ragEvaluation";
+
+describe("scorecards and error analysis", () => {
+  it("night-sweat confusion matrix is consistent and explains its errors", () => {
+    const r = analyzeNightSweats(30, 100, 11);
+    const c = r.combined;
+    expect(c.tp + c.fp + c.fn + c.tn).toBe(r.nights);
+    expect(r.misses.n).toBe(c.fn);
+    expect(r.falseAlarms.n).toBe(c.fp);
+    expect(r.misses.tempRiseTooSmall + r.misses.sleepNotDisruptedEnough).toBeCloseTo(1, 2);
+    expect(c.mcc).toBeGreaterThan(r.alwaysNo.mcc);          // beats the dumb baseline
+    expect(c.falseAlarmRate).toBeLessThan(r.disruptionOnly.falseAlarmRate);
+  });
+
+  it("ovulation misses fall as the temperature rise grows", () => {
+    const r = analyzeOvulation(600, 5);
+    const d = r.detection;
+    expect(d.tp + d.fp + d.fn + d.tn).toBe(r.cycles);
+    expect(r.missByRise[0].missRate).toBeGreaterThan(r.missByRise[2].missRate);
+    expect(d.mcc).toBeGreaterThan(r.alwaysDetect.mcc);
+  });
+
+  it("the corrected trigger finder cries wolf less and still finds strong triggers", () => {
+    const t = evaluateTriggers(150, 60, 3);
+    expect(t.falseTriggerRate.corrected).toBeLessThan(t.falseTriggerRate.naive);
+    expect(t.falseTriggerRate.corrected).toBeLessThan(0.2);
+    expect(t.power[2].corrected).toBeGreaterThan(0.9);
+    expect(t.power[2].corrected).toBeGreaterThan(t.power[0].corrected);
+  });
+
+  it("retrieval beats random, abstains on small talk; the planner never breaks the user's choices", () => {
+    const r = evaluateRetrieval();
+    expect(r.hitAt3).toBeGreaterThan(r.randomBaseline.hitAt3 * 2);
+    expect(r.offTopic.correctlyEmpty).toBe(r.offTopic.messages);
+    const p = evaluatePlanner(400, 21);
+    expect(p.equipmentViolations).toBe(0);
+    expect(p.emptyDays).toBe(0);
+    expect(p.boneStrengthRule.satisfied).toBe(p.boneStrengthRule.plans);
+    expect(p.citedShare).toBe(1);
+  });
+});

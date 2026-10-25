@@ -11,7 +11,7 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run --root .",
-    "evidence": "python3 scripts/evidence_hotflash.py && python3 scripts/nhanes_reference.py && tsx scripts/evaluate_detectors.ts",
+    "evidence": "python3 scripts/evidence_hotflash.py && python3 scripts/nhanes_reference.py && python3 scripts/disparities.py && tsx scripts/evaluate_detectors.ts",
     "train:hotflash": "python3 scripts/train_hotflash_model.py",
     "validate:ovulation": "tsx scripts/validate_ovulation_mcphases.ts"
   },

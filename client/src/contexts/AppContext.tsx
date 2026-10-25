@@ -57,6 +57,9 @@ import {
   NutritionGoals,
   Exercise,
 } from "@/lib/aiService";
+import { planWeek, type PlanInput } from "@/lib/planner";
+import { isBoneHealthCohort } from "@/lib/boneHealth";
+import type { Passage } from "@/lib/evidence";
 
 export type FitnessGoal =
   | "lose_weight"
@@ -195,6 +198,8 @@ export interface WorkoutExercise extends Exercise {
   dayOfWeek: number;    // 0=Monday, 6=Sunday
   completed: boolean;   // Exercise-level completion
   customNotes?: string; // User can add personal notes
+  /** Planner category (strength, impact, cardio, balance, mobility) */
+  kind?: string;
 }
 
 export interface WeeklyWorkoutPlan {
@@ -204,6 +209,11 @@ export interface WeeklyWorkoutPlan {
   createdAt: string;
   lastUpdated: string;
   cyclePhaseAtCreation?: CyclePhase; // For female users
+  /** What the plan was built from, so the UI can show it and the user can see it changed with their choices */
+  basis?: { goal: string; equipment: string[]; styles: string[]; boneCohort: boolean };
+  /** Evidence passages the plan is grounded in (retrieved by BM25, see lib/evidence.ts) */
+  evidence?: Passage[];
+  notes?: string[];
 }
 
 // ── Cycle utility functions ──────────────────────────────────
@@ -291,6 +301,8 @@ interface AppContextType extends AppState {
   removeSupplement: (id: string) => void;
   refreshExercisePlan: () => void;
   generateWeeklyPlan: (daysPerWeek: number) => Promise<void>;
+  /** Change the choices a plan is built from (goal, equipment, styles, body numbers). Plans and targets update; logs are kept. */
+  updatePreferences: (patch: Partial<Pick<UserProfile, "goal" | "equipment" | "workoutStyles" | "weight" | "height" | "age">>) => void;
   updateWeeklyPlan: (plan: WeeklyWorkoutPlan) => void;
   toggleExerciseCompletion: (exerciseId: string) => void;
   addCustomExerciseToDay: (dayOfWeek: number, exercise: WorkoutExercise) => void;
@@ -350,6 +362,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [bpLog, setBpLog] = useState<BpReading[]>([]);
   const [moodLog, setMoodLog] = useState<MoodEntry[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  /** Latest chosen days per week, readable inside callbacks without re-creating them */
+  const weeklyDaysRef = useRef(4);
 
   const fetchExercisePlan = useCallback(async (p: UserProfile) => {
     setExerciseLoading(true);
@@ -360,7 +374,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const plan = await generateExercisePlan({
         age: p.age, weight: p.weight, height: p.height, goal: p.goal,
         equipment: p.equipment, workoutStyles: p.workoutStyles,
-        cyclePhase: phase,
+        cyclePhase: phase, daysPerWeek: weeklyDaysRef.current, boneCohort: planInputFor(p, 4).boneCohort,
       });
       setExercisePlan(plan);
     } catch (err) {
@@ -379,8 +393,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ? getCyclePhase(getCycleDay(p.womensHealth.lastPeriodDate, p.womensHealth.cycleLength), p.womensHealth.cycleLength)
         : undefined;
       const [goals, plan] = await Promise.all([
-        generateNutritionGoals({ ...p, lifeStage: lifeStageFor(p) }),
-        generateExercisePlan({ age: p.age, weight: p.weight, height: p.height, goal: p.goal, equipment: p.equipment, workoutStyles: p.workoutStyles, cyclePhase: phase }),
+        generateNutritionGoals(nutritionInputFor(p, weeklyDaysRef.current)),
+        generateExercisePlan({ age: p.age, weight: p.weight, height: p.height, goal: p.goal, equipment: p.equipment, workoutStyles: p.workoutStyles, cyclePhase: phase, daysPerWeek: weeklyDaysRef.current, boneCohort: planInputFor(p, 4).boneCohort }),
       ]);
       setNutritionGoals(goals);
       setExercisePlan(plan);
@@ -436,47 +450,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (profile) fetchExercisePlan(profile);
   }, [profile, fetchExercisePlan]);
 
+  const buildWeekly = useCallback((p: UserProfile, daysPerWeek: number): WeeklyWorkoutPlan => {
+    const phase = p.womensHealth?.lastPeriodDate && hasActiveCycle(p)
+      ? getCyclePhase(getCycleDay(p.womensHealth.lastPeriodDate, p.womensHealth.cycleLength), p.womensHealth.cycleLength)
+      : undefined;
+    const input = planInputFor(p, daysPerWeek, phase);
+    const week = planWeek(input);
+    const stamp = Date.now();
+    const exercises: WorkoutExercise[] = week.days.flatMap((d) =>
+      d.exercises.map((e, i) => ({ ...e, id: `${d.dayOfWeek}-${i}-${e.id}-${stamp}`, dayOfWeek: d.dayOfWeek, completed: false })));
+    return {
+      id: `plan-${stamp}`, daysPerWeek, exercises, createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString(),
+      cyclePhaseAtCreation: phase as CyclePhase | undefined,
+      basis: { goal: p.goal, equipment: p.equipment, styles: p.workoutStyles, boneCohort: input.boneCohort },
+      evidence: week.evidence, notes: week.notes,
+    };
+  }, []);
+
   const generateWeeklyPlan = useCallback(async (daysPerWeek: number) => {
-    if (!profile || exercisePlan.length === 0) return;
+    if (!profile) return;
+    weeklyDaysRef.current = daysPerWeek;
     setWeeklyPlanLoading(true);
     try {
-      const exercises: WorkoutExercise[] = [];
-      const workDays = new Set<number>();
-      const daysToAssign = Math.min(daysPerWeek, 7);
-      const dayGap = Math.max(1, Math.floor(7 / daysToAssign));
-      for (let i = 0; i < daysToAssign; i++) {
-        workDays.add((i * dayGap) % 7);
-      }
-      let exIdx = 0;
-      workDays.forEach((dayOfWeek) => {
-        for (let i = 0; i < 2 && exIdx < exercisePlan.length; i++, exIdx++) {
-          const ex = exercisePlan[exIdx];
-          exercises.push({
-            ...ex,
-            id: `${dayOfWeek}-${i}-${Date.now()}`,
-            dayOfWeek,
-            completed: false,
-          });
-        }
-      });
-      const phase = profile.womensHealth?.lastPeriodDate
-        ? getCyclePhase(getCycleDay(profile.womensHealth.lastPeriodDate, profile.womensHealth.cycleLength), profile.womensHealth.cycleLength)
-        : undefined;
-      const plan: WeeklyWorkoutPlan = {
-        id: `plan-${Date.now()}`,
-        daysPerWeek,
-        exercises,
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
-        cyclePhaseAtCreation: phase,
-      };
-      setWeeklyWorkoutPlanState(plan);
+      setWeeklyWorkoutPlanState(buildWeekly(profile, daysPerWeek));
+      // Training days change the energy estimate, so the food targets follow
+      setNutritionGoals(await generateNutritionGoals(nutritionInputFor(profile, daysPerWeek)));
     } catch (err) {
       console.error("Weekly plan generation failed:", err);
     } finally {
       setWeeklyPlanLoading(false);
     }
-  }, [profile, exercisePlan]);
+  }, [profile, buildWeekly]);
+
+  const updatePreferences = useCallback((patch: Partial<Pick<UserProfile, "goal" | "equipment" | "workoutStyles" | "weight" | "height" | "age">>) => {
+    if (!profile) return;
+    const next: UserProfile = { ...profile, ...patch };
+    setProfileState(next);
+    const days = weeklyWorkoutPlan?.daysPerWeek ?? weeklyDaysRef.current;
+    setWeeklyWorkoutPlanState(buildWeekly(next, days));
+    generateNutritionGoals(nutritionInputFor(next, days)).then(setNutritionGoals).catch(() => undefined);
+  }, [profile, weeklyWorkoutPlan, buildWeekly]);
 
   const updateWeeklyPlan = useCallback((plan: WeeklyWorkoutPlan) => {
     setWeeklyWorkoutPlanState(plan);
@@ -669,7 +682,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setProfile, addMeal, setSteps, toggleExercise, addWeightEntry,
       addWellnessEntry, addCycleSymptomEntry, logPeriodStart,
       addSupplement, removeSupplement, refreshExercisePlan,
-      generateWeeklyPlan, updateWeeklyPlan, toggleExerciseCompletion,
+      generateWeeklyPlan, updatePreferences, updateWeeklyPlan, toggleExerciseCompletion,
       addCustomExerciseToDay, removeExerciseFromDay, editExerciseInPlan,
     }}>
       {children}
@@ -684,6 +697,22 @@ function localDay(d: Date) {
 export function allowsDeficit(p: UserProfile | null): boolean {
   if (!p) return true;
   return lifeStageFor(p)?.allowCalorieDeficit !== false;
+}
+
+/** Everything the planner needs, from the profile the user filled in. */
+function planInputFor(p: UserProfile, daysPerWeek: number, cyclePhase?: string): PlanInput {
+  return {
+    goal: p.goal, equipment: p.equipment, styles: p.workoutStyles, daysPerWeek, age: p.age, cyclePhase,
+    boneCohort: p.biologicalSex !== "male" && isBoneHealthCohort({ age: p.age, bodyKind: bodyKind(p) }),
+  };
+}
+
+function nutritionInputFor(p: UserProfile, daysPerWeek: number) {
+  return {
+    name: p.name, age: p.age, weight: p.weight, height: p.height, goal: p.goal, biologicalSex: p.biologicalSex, daysPerWeek,
+    boneCohort: planInputFor(p, daysPerWeek).boneCohort, postmenopause: bodyKind(p) === "menopause",
+    lifeStage: lifeStageFor(p),
+  };
 }
 
 function lifeStageFor(p: UserProfile) {

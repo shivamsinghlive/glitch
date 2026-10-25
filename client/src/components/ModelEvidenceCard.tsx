@@ -13,7 +13,7 @@ import evidence from "@/lib/models/hotflashEvidence.json";
 import detectors from "@/lib/models/detectorEvaluation.json";
 import nhanes from "@/lib/models/nhanesReference.json";
 import { bandFor } from "@/lib/populationContext";
-import { CalibrationChart, CountUp, FairnessBars, NightSweatLab, PercentileBand, StatTile } from "./EvidenceCharts";
+import { CalibrationChart, CountUp, DisparityPanel, ScoresPanel, ErrorRateTable, FairnessBars, NightSweatLab, PercentileBand, SensorStress, StatTile } from "./EvidenceCharts";
 
 const INK = "var(--ink)";
 const MUTED = "var(--txt-muted)";
@@ -22,7 +22,7 @@ const font = "'DM Sans', sans-serif";
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 const ord = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th")}`;
 
-type Tab = "you" | "fair" | "detect";
+type Tab = "you" | "fair" | "groups" | "detect" | "scores";
 
 export default function ModelEvidenceCard() {
   const { profile } = useApp();
@@ -55,9 +55,9 @@ export default function ModelEvidenceCard() {
       </button>
       {open && (
         <div style={{ marginTop: 10 }}>
-          <div className="flex gap-1.5" style={{ marginBottom: 10 }}>
-            {([["you", "You vs US women"], ["fair", "Fairness"], ["detect", "Detectors"]] as [Tab, string][]).map(([k, label]) => (
-              <button key={k} onClick={() => setTab(k)} style={{ flex: 1, padding: "7px 0", borderRadius: 10, fontSize: 11.5, fontWeight: 700, fontFamily: font, border: tab === k ? `2px solid ${HEAT}` : "1.5px solid var(--line)", background: "var(--card-bg)", color: INK }}>{label}</button>
+          <div className="flex flex-wrap gap-1.5" style={{ marginBottom: 10 }}>
+            {([["you", "You vs US"], ["fair", "Fairness"], ["groups", "Groups"], ["detect", "Detectors"], ["scores", "Scores"]] as [Tab, string][]).map(([k, label]) => (
+              <button key={k} onClick={() => setTab(k)} style={{ flex: "1 1 30%", padding: "7px 0", borderRadius: 10, fontSize: 11.5, fontWeight: 700, fontFamily: font, border: tab === k ? `2px solid ${HEAT}` : "1.5px solid var(--line)", background: "var(--card-bg)", color: INK }}>{label}</button>
             ))}
           </div>
           <AnimatePresence mode="wait" initial={false}>
@@ -76,15 +76,20 @@ export default function ModelEvidenceCard() {
               {tab === "you" && !pop && <p>Add your age to see how you compare.</p>}
               {tab === "fair" && (
                 <>
-                  <p><b>We did not use race or education.</b> Brier score {evidence.brier} vs {evidence.brierBaseline} for always guessing the average; AUC {evidence.auc} (95% range {evidence.aucBootstrap95[0]}–{evidence.aucBootstrap95[1]}).</p>
+                  <p><b>We do not score anyone by race or education, and we audit by both.</b> Brier score {evidence.brier} vs {evidence.brierBaseline} for always guessing the average; AUC {evidence.auc} (95% range {evidence.aucBootstrap95[0]}–{evidence.aucBootstrap95[1]}).</p>
                   <div style={{ marginTop: 8 }}><CalibrationChart /></div>
                   <FairnessBars />
+                  <ErrorRateTable />
                   <p style={{ marginTop: 8 }}>Adding race and education would have made the model <i>no better</i> (AUC {evidence.fairness.aucWithProtectedFeatures}), so leaving them out costs nothing.</p>
                 </>
               )}
+              {tab === "groups" && <DisparityPanel />}
+              {tab === "scores" && <ScoresPanel />}
               {tab === "detect" && (
                 <>
                   <NightSweatLab />
+                  <SensorStress />
+                  <p style={{ marginTop: 12, padding: "8px 10px", borderRadius: 10, background: "var(--card-bg)" }}><b>No flag is not reassurance.</b> The detector catches about {pct(detectors.nightSweat.operating.recall)} of real night sweats at the default setting. If you feel it was a bad night, it was.</p>
                   <p style={{ marginTop: 12 }}><b>Ovulation detector</b> <span style={{ color: MUTED }}>({detectors.ovulation.cycles} simulated cycles, {pct(detectors.ovulation.anovulatory / detectors.ovulation.cycles)} with no ovulation)</span></p>
                   <div className="flex gap-2" style={{ marginTop: 6 }}>
                     <StatTile value={<CountUp to={Math.round(detectors.ovulation.sensitivity * 100)} suffix="%" />} label="ovulations found" />

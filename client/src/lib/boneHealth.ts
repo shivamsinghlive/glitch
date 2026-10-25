@@ -109,7 +109,7 @@ export function suggestBoneSupplements(): SupplementSuggestion[] {
   return [
     { name: "Vitamin D3", dose: "800 IU daily", emoji: "☀️", reason: "Helps you absorb calcium; most people over 50 run low.", citationKey: "nutrition" },
     { name: "Calcium", dose: "1000 mg daily (food first)", emoji: "🥛", reason: "The main mineral in bone. Aim for food sources, supplement the gap.", citationKey: "nutrition" },
-    { name: "Protein", dose: "~1.1–1.5 g per kg body weight", emoji: "🥩", reason: "Protects muscle as estrogen drops. Spread across meals.", citationKey: "protein" },
+    { name: "Protein", dose: "at least 1.0–1.2 g per kg body weight", emoji: "🥩", reason: "Protects muscle as estrogen drops, especially with strength training. Spread across meals.", citationKey: "protein" },
   ];
 }
 

@@ -142,7 +142,7 @@ export default function WellnessCheckIn() {
               padding: "7px 14px",
               borderRadius: 10,
               background: open ? "var(--surface-2)" : "var(--accent)",
-              color: open ? "var(--ink)" : "white",
+              color: open ? "var(--ink)" : "var(--on-accent)",
               fontSize: 12,
               fontWeight: 600,
               fontFamily: "'DM Sans', sans-serif",

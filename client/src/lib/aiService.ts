@@ -4,6 +4,10 @@
  * key, picks models and handles rate limits. Every function here also has a local fallback, so the
  * app keeps working when the proxy reports that Groq is busy or unreachable.
  */
+import { assertAiAllowed, recordOutbound, type AiScope } from "./aiPrivacy";
+import { computeNutritionGoals } from "./nutritionPlan";
+import { planDay } from "./planner";
+import { evidenceBlock, passageById, retrieve } from "./evidence";
 import { offlineCoachReply } from "./coachAgent";
 
 // ── Generic text chat (JSON output) ──────────────────────────
@@ -12,6 +16,8 @@ interface ChatOpts {
   background?: boolean;
   /** Live chat: if every model is busy, the server waits out Groq's suggested delay once more */
   patient?: boolean;
+  /** "chat" calls carry only the user's own messages; "full" calls may carry profile or health data. Default "full". */
+  scope?: AiScope;
 }
 
 async function chat(
@@ -20,10 +26,13 @@ async function chat(
   maxTokens = 1200,
   opts: ChatOpts = {}
 ): Promise<string> {
+  const { scope = "full", ...rest } = opts;
+  assertAiAllowed(scope);
+  recordOutbound("chat", messages);
   const res = await fetch("/api/llm/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, json, maxTokens, ...opts }),
+    body: JSON.stringify({ messages, json, maxTokens, ...rest }),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -46,6 +55,8 @@ async function visionChat(
   imageBase64DataUrl: string,
   textPrompt: string
 ): Promise<string> {
+  assertAiAllowed("photo");
+  recordOutbound("photo", `[food photo, about ${Math.round(imageBase64DataUrl.length / 1365)} KB]\n${textPrompt}`);
   const res = await fetch("/api/llm/vision", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -96,56 +107,23 @@ export async function generateNutritionGoals(profile: {
   weight: number;
   height: number;
   goal: string;
+  biologicalSex?: "female" | "male" | "prefer_not_to_say";
+  /** Training days per week, if known */
+  daysPerWeek?: number;
+  /** Peri/post-menopause or 40+ female */
+  boneCohort?: boolean;
+  postmenopause?: boolean;
   /** e.g. "pregnant" — stages where a calorie deficit is unsafe set allowCalorieDeficit=false */
   lifeStage?: { label: string; allowCalorieDeficit: boolean };
 }): Promise<NutritionGoals> {
-  const goalLabels: Record<string, string> = {
-    lose_weight:     "lose weight and reduce body fat",
-    maintain:        "maintain current weight and stay healthy",
-    build_muscle:    "build lean muscle mass",
-    manage_diabetes: "manage Type 2 diabetes and control blood sugar",
-  };
-  const noDeficit = profile.lifeStage?.allowCalorieDeficit === false;
-  // Weight loss is never targeted when a deficit is unsafe (pregnancy, postpartum, pre-menarche)
-  const goalDesc = noDeficit && profile.goal === "lose_weight"
-    ? goalLabels.maintain
-    : goalLabels[profile.goal] ?? profile.goal;
-
-  const fallback: NutritionGoals = {
-    calorieTarget: profile.goal === "build_muscle" ? 2200 : profile.goal === "manage_diabetes" ? 1900 : profile.goal === "maintain" || noDeficit ? 2050 : 1750,
-    proteinTarget: Math.round((profile.weight * 1.8) || 90),
-    carbsTarget: profile.goal === "manage_diabetes" ? 180 : 220,
-    fatsTarget: profile.goal === "build_muscle" ? 65 : 55,
-    fiberTarget: profile.goal === "manage_diabetes" ? 35 : 30,
-    omega3Target: 2,
-    vitDTarget: 600,
-    vitB12Target: 2.4,
-    ironTarget: 18,
-    stepGoal: 8000,
-    rationale: `${profile.name}, this plan balances energy, recovery, and sustainable habits for your ${goalDesc}.`,
-  };
-
-  try {
-    const prompt = `You are a certified nutritionist. Calculate precise daily nutrition targets for this user.
-
-User: ${profile.name}, Age ${profile.age}, Weight ${profile.weight}kg, Height ${profile.height}cm
-Goal: ${goalDesc}${profile.lifeStage ? `\nLife stage: ${profile.lifeStage.label}` : ""}${noDeficit ? "\nIMPORTANT: Do NOT apply any calorie deficit for this life stage. Use TDEE or higher." : ""}
-
-Use Mifflin-St Jeor BMR × 1.55 activity multiplier, then adjust for goal:
-- Weight loss: -500 kcal deficit
-- Muscle building: +300 kcal surplus, protein 1.8-2.2g/kg
-- Diabetes: reduce carbs, increase fiber, low-GI focus
-- Maintain: TDEE as-is
-
-Return ONLY valid JSON (no markdown, no explanation):
-{"calorieTarget":1800,"proteinTarget":90,"carbsTarget":220,"fatsTarget":55,"fiberTarget":30,"omega3Target":2.0,"vitDTarget":600,"vitB12Target":2.4,"ironTarget":18,"stepGoal":8000,"rationale":"One friendly sentence explaining the plan"}`;
-
-    const raw = await chat([{ role: "user", content: prompt }], true, 900, { background: true });
-    return safeParseJSON<NutritionGoals>(raw, fallback);
-  } catch (error) {
-    console.warn("Nutrition plan generation failed, using local fallback:", error);
-    return fallback;
-  }
+  // The numbers are computed on the device (Mifflin-St Jeor + guidance), so they are always correct for the
+  // profile and update instantly when weight, goal or training days change. No AI call can alter them.
+  const { basis: _basis, ...goals } = computeNutritionGoals({
+    name: profile.name, age: profile.age, weight: profile.weight, height: profile.height, goal: profile.goal,
+    sex: profile.biologicalSex, daysPerWeek: profile.daysPerWeek, boneCohort: profile.boneCohort, postmenopause: profile.postmenopause,
+    allowCalorieDeficit: profile.lifeStage?.allowCalorieDeficit,
+  });
+  return goals;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -168,6 +146,11 @@ export interface Exercise {
   dayOfWeek?: number;
   completed?: boolean;
   description?: string;
+  /** Why this exercise is in the plan: which of the user's choices it matches, or why it was added */
+  why?: string;
+  /** Evidence passage ids (see evidence.ts) that support it */
+  sources?: string[];
+  formName?: string;
 }
 
 export async function generateExercisePlan(profile: {
@@ -178,6 +161,9 @@ export async function generateExercisePlan(profile: {
   equipment?: string[];
   workoutStyles?: string[];
   cyclePhase?: string;
+  daysPerWeek?: number;
+  /** Peri/post-menopause or 40+ female: turns on the bone-and-muscle rules */
+  boneCohort?: boolean;
 }): Promise<Exercise[]> {
   const goalLabels: Record<string, string> = {
     lose_weight:     "lose weight and burn fat",
@@ -188,11 +174,12 @@ export async function generateExercisePlan(profile: {
   const goalDesc = goalLabels[profile.goal] ?? profile.goal;
   const bmi = (profile.weight / ((profile.height / 100) ** 2)).toFixed(1);
 
-  const fallback: Exercise[] = [
-    { id: "walk-cardio", name: "Brisk Walk", detail: "20 min steady pace", burn: 120, emoji: "🚶", rationale: "Simple cardio that supports fat loss and heart health with your current routine.", cues: ["Keep shoulders relaxed", "Swing arms naturally", "Maintain a steady pace"], goodCue: "Great pacing — you’re staying consistent." },
-    { id: "bodyweight-squat", name: "Bodyweight Squat", detail: "3 × 12 reps", burn: 90, emoji: "🏋️", rationale: "Builds lower-body strength and supports muscle retention for your goal.", cues: ["Chest up", "Knees track over toes", "Drive through heels"], goodCue: "Nice depth — strong control throughout the rep." },
-    { id: "push-up", name: "Incline Push-up", detail: "3 × 10 reps", burn: 80, emoji: "💪", rationale: "Improves upper-body strength and helps maintain lean muscle without heavy equipment.", cues: ["Body in one line", "Lower chest to bench", "Press up with control"], goodCue: "Strong form — you kept the core engaged." },
-  ];
+  // Local, evidence-grounded plan built from the user's own choices (equipment, styles, goal, life stage).
+  // It is the default, and the fallback whenever the AI is off or unavailable.
+  const fallback: Exercise[] = planDay({
+    goal: profile.goal as never, equipment: (profile.equipment ?? ["none"]) as never, styles: (profile.workoutStyles ?? []) as never,
+    daysPerWeek: profile.daysPerWeek ?? 4, age: profile.age, boneCohort: !!profile.boneCohort, cyclePhase: profile.cyclePhase,
+  });
 
   try {
     const equipmentList = profile.equipment?.length
@@ -207,7 +194,13 @@ export async function generateExercisePlan(profile: {
       ? `\nMenstrual cycle phase: ${profile.cyclePhase}. Adjust workout intensity accordingly:\n- menstrual: gentle/restorative only\n- follicular: progressive overload welcome\n- ovulation: peak performance\n- luteal: moderate, recovery-focused`
       : "";
 
+    // RAG: retrieve the evidence most relevant to this user and make the model ground its plan in it
+    const query = [goalDesc, profile.boneCohort ? "bone menopause postmenopause strength impact frequency" : "general guideline", styleList, equipmentList].join(" ");
+    const passages = retrieve(query, 5).map((r) => r.passage);
     const prompt = `You are a certified personal trainer. Create a personalized daily workout plan.
+
+EVIDENCE (ground your plan in this; cite passage ids in each exercise's "sources"):
+${evidenceBlock(passages)}
 
 User: Age ${profile.age}, Weight ${profile.weight}kg, Height ${profile.height}cm, BMI ${bmi}
 Goal: ${goalDesc}
@@ -225,9 +218,10 @@ Critical rules:
 - Realistic calorie burn estimates
 - Specific, actionable form cues (not generic)
 - In rationale, briefly explain why this exercise suits their goal/equipment/style
+- Each exercise must include "sources": an array of 1-2 evidence ids from the EVIDENCE list that support it
 
 Return ONLY a valid JSON array (no markdown, no extra text):
-[{"id":"squat","name":"Bodyweight Squat","detail":"3 × 15 reps","burn":80,"emoji":"🏋️","rationale":"Builds leg strength with no equipment needed","cues":["Keep chest up","Knees over toes","Lower hips to parallel","Drive through heels"],"goodCue":"Perfect depth! Great form"}]`;
+[{"id":"squat","name":"Bodyweight Squat","detail":"3 × 15 reps","burn":80,"emoji":"🏋️","rationale":"Builds leg strength with no equipment needed","sources":["bmd-freq"],"cues":["Keep chest up","Knees over toes","Lower hips to parallel","Drive through heels"],"goodCue":"Perfect depth! Great form"}]`;
 
     const raw = await chat([{ role: "user", content: prompt }], true, 2600, { background: true });
 
@@ -245,7 +239,11 @@ Return ONLY a valid JSON array (no markdown, no extra text):
       parsed = safeParseJSON<Exercise[]>(raw, []);
     }
 
-    return Array.isArray(parsed) ? parsed : fallback;
+    const valid = Array.isArray(parsed)
+      ? parsed.filter((e) => e && typeof e.name === "string" && typeof e.detail === "string" && Array.isArray(e.cues))
+          .map((e, i) => ({ ...e, id: e.id || `ai-${i}`, burn: Number(e.burn) || 80, emoji: e.emoji || "🏋️", why: e.rationale, sources: (e.sources ?? []).filter((id) => passageById(id)) }))
+      : [];
+    return valid.length >= 3 ? valid : fallback;
   } catch (error) {
     console.warn("Exercise plan generation failed, using local fallback:", error);
     return fallback;
@@ -268,25 +266,28 @@ export interface FoodAnalysis {
 }
 
 export async function analyzeFoodImage(base64DataUrl: string): Promise<FoodAnalysis> {
-  const fallback: FoodAnalysis = {
-    name: "Mixed Meal", calories: 400, protein: 18, carbs: 45, fats: 14,
-    fiber: 5, omega3: 0.3, confidence: "low", notes: "Could not analyze image clearly",
-  };
-
-  try {
-    const prompt = `You are a nutrition expert. Analyze this food image and estimate nutritional content for a typical single serving.
+  // Never invent nutrition numbers: if the photo can't be analysed, throw so the app asks the user to type
+  // it in. (An earlier version silently returned a made-up "Mixed Meal, 400 kcal".)
+  const prompt = `You are a nutrition expert. Analyze this food image and estimate nutritional content for a typical single serving.
 
 Return ONLY valid JSON (no markdown, no explanation):
 {"name":"Food Name","calories":400,"protein":20,"carbs":45,"fats":12,"fiber":5.0,"omega3":0.5,"confidence":"high","notes":"Brief note about the meal"}
 
 If you cannot identify the food clearly, make your best estimate and set confidence to "low".`;
 
-    const raw = await visionChat(base64DataUrl, prompt);
-    return safeParseJSON<FoodAnalysis>(raw, fallback);
-  } catch (error) {
-    console.warn("Food image analysis failed, using local fallback:", error);
-    return fallback;
+  const raw = await visionChat(base64DataUrl, prompt);
+  const r = safeParseJSON<Partial<FoodAnalysis> | null>(raw, null);
+  const num = (x: unknown) => (typeof x === "number" && Number.isFinite(x) && x >= 0 ? x : null);
+  const calories = num(r?.calories), protein = num(r?.protein), carbs = num(r?.carbs), fats = num(r?.fats);
+  if (!r || typeof r.name !== "string" || !r.name.trim() || calories == null || protein == null || carbs == null || fats == null || calories > 4000) {
+    throw new Error("The photo could not be analysed reliably");
   }
+  return {
+    name: r.name.trim().slice(0, 80), calories, protein, carbs, fats,
+    fiber: num(r.fiber) ?? 0, omega3: num(r.omega3) ?? 0,
+    confidence: r.confidence === "high" || r.confidence === "medium" ? r.confidence : "low",
+    notes: typeof r.notes === "string" ? r.notes : "",
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -315,7 +316,7 @@ Use a typical standard serving size.
 Return ONLY valid JSON (no markdown):
 {"found":true,"name":"1 tbsp Flax Seeds","calories":37,"protein":1.3,"carbs":2.0,"fats":3.0,"fiber":1.9,"omega3":1.60}`;
 
-    const raw = await chat([{ role: "user", content: prompt }], true, 700);
+    const raw = await chat([{ role: "user", content: prompt }], true, 700, { scope: "chat" }); // sends only a food name
     return safeParseJSON<IngredientNutrition>(raw, fallback);
   } catch (error) {
     console.warn("Ingredient lookup failed, using local fallback:", error);
@@ -374,7 +375,7 @@ Return ONLY the message text.`;
 // ─────────────────────────────────────────────────────────────
 export async function coachCompletion(messages: { role: "system" | "user" | "assistant"; content: string }[]): Promise<string> {
   try {
-    return await chat(messages, true, 700, { patient: true });
+    return await chat(messages, true, 700, { patient: true, scope: "chat" });
   } catch (error) {
     // Offline failsafe: still log hot flashes / BP / mood from the user's words, in the same JSON shape
     console.warn("Coach model unavailable, using offline reply:", error);

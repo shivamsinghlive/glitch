@@ -101,7 +101,8 @@ export default function HotflashRiskCard({ hasLoggedFlashes }: { hasLoggedFlashe
             <div style={{ marginTop: 8, padding: "10px 12px", borderRadius: 12, background: "var(--surface-2)", fontSize: 11.5, color: INK, fontFamily: font, lineHeight: 1.55 }}>
               <p><b>Model:</b> logistic regression trained on {MODEL_CARD.trainedOn}.</p>
               <p><b>Accuracy:</b> cross-validated AUC {MODEL_CARD.aucBase} (profile) / {MODEL_CARD.aucLabs} (with labs).</p>
-              <p><b>Fairness:</b> {MODEL_CARD.excluded.join(" and ")} are in the dataset but deliberately not used.</p>
+              <p><b>Honest read:</b> most of the signal is one question, earlier symptoms. Its yes/no calls match that single question exactly (F1 0.61).</p>
+              <p><b>Fairness:</b> {MODEL_CARD.excluded.join(" and ")} are in the dataset but not used to score you. We use them only to audit the model by group (see Model evidence).</p>
               <p><b>Limits:</b> {MODEL_CARD.caveat}</p>
               <p style={{ color: MUTED, marginTop: 4 }}>{MODEL_CARD.citation} · {MODEL_CARD.license}</p>
             </div>

@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import { useApp, bodyKind, WeeklyWorkoutPlan, WorkoutExercise } from "@/contexts/AppContext";
 import { useStepCounter } from "@/hooks/useStepCounter";
 import BoneHealthCard from "@/components/BoneHealthCard";
+import TrainingChoices from "@/components/TrainingChoices";
+import PlanEvidence from "@/components/PlanEvidence";
 import { isBoneHealthCohort } from "@/lib/boneHealth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -183,6 +185,9 @@ export default function Fitness() {
         </div>
       )}
 
+      {/* The user's choices drive the plan and the food targets */}
+      <div className="px-4"><TrainingChoices /></div>
+
       {/* Days Per Week Selector */}
       <div className="px-4 space-y-3">
         <label className="text-sm font-semibold text-foreground">How many days per week?</label>
@@ -199,6 +204,8 @@ export default function Fitness() {
         </Button>
       </div>
 
+      {weeklyWorkoutPlan && <div className="px-4"><PlanEvidence /></div>}
+
       {/* Weekly Plan */}
       {weeklyWorkoutPlan && (
         <div className="px-4 space-y-3">
@@ -212,7 +219,7 @@ export default function Fitness() {
                 <button onClick={() => setExpandedDay(isExpanded ? null : dayIdx)} className="w-full p-4 flex items-center justify-between hover:bg-secondary transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "color-mix(in oklch, var(--accent) 10%, transparent)" }}>
-                      <span className="text-sm font-bold text-[var(--ink)]">{dayIdx}</span>
+                      <span className="text-xs font-bold text-[var(--ink)]">{day}</span>
                     </div>
                     <div className="text-left">
                       <p className="font-semibold text-foreground">{DAY_FULL[dayIdx]}</p>
@@ -250,20 +257,21 @@ export default function Fitness() {
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
-                                  <button onClick={() => toggleExerciseCompletion(ex.id)} className="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all" style={{ borderColor: ex.completed ? "var(--accent)" : "var(--line)", background: ex.completed ? "var(--accent)" : "transparent" }}>
+                                  <button onClick={() => toggleExerciseCompletion(ex.id)} aria-pressed={ex.completed} aria-label={`${ex.completed ? "Mark not done" : "Mark done"}: ${ex.name}`} className="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all" style={{ borderColor: ex.completed ? "var(--accent)" : "var(--line)", background: ex.completed ? "var(--accent)" : "transparent" }}>
                                     {ex.completed && <Check size={14} className="text-white" />}
                                   </button>
                                   <p className={`font-semibold ${ex.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>{ex.name}</p>
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1 ml-8">
-                                  {ex.sets} sets × {ex.reps} reps · {ex.duration}
+                                  {ex.sets && ex.reps ? `${ex.sets} sets × ${ex.reps} reps${ex.duration ? ` · ${ex.duration}` : ""}` : ex.detail}
                                 </p>
+                                {ex.why && <p className="text-xs mt-1 ml-8" style={{ color: "var(--accent)" }}>Why: {ex.why}</p>}
                               </div>
                               <div className="flex gap-1">
-                                <button onClick={() => handleEditExercise(ex)} className="p-1.5 hover:bg-secondary rounded transition-colors">
+                                <button onClick={() => handleEditExercise(ex)} aria-label={`Edit ${ex.name}`} className="p-1.5 hover:bg-secondary rounded transition-colors">
                                   <Edit2 size={14} className="text-muted-foreground" />
                                 </button>
-                                <button onClick={() => removeExerciseFromDay(ex.id)} className="p-1.5 hover:bg-destructive/10 rounded transition-colors">
+                                <button onClick={() => removeExerciseFromDay(ex.id)} aria-label={`Remove ${ex.name}`} className="p-1.5 hover:bg-destructive/10 rounded transition-colors">
                                   <Trash2 size={14} className="text-destructive" />
                                 </button>
                               </div>

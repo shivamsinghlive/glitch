@@ -88,11 +88,14 @@ Open **http://localhost:3000** in Chrome.
 - **Night-sweat detection**: nights with warm skin temperature *and* broken sleep, from WHOOP.
 - **Perimenopause staging and alerts**: STRAW+10 stages, early (<45) and premature (<40) menopause flags, high-BP (ACC/AHA), sleep, hot-flash and mental-health alerts, optional notifications.
 - **Doctor summary**: one-page weekly table to print or save as PDF.
+- **Plans built from your choices, grounded in evidence (RAG)**: pick your goal, equipment, favourite training styles and days per week, and the weekly plan and food targets rebuild instantly. Every exercise says why it's there, and the plan lists the cited passages it was retrieved from (BM25 retrieval over a small cited library, on-device). The coach is grounded the same way.
+- **Food that updates correctly**: calorie and protein targets are computed from your age, weight, height, goal and training days (Mifflin-St Jeor, menopause protein guidance). Log by voice, photo or by typing it in; a failed photo analysis never invents numbers.
 - **Also included**: cycle-adjusted recovery, ovulation confirmation, a camera Form Coach (MediaPipe), food-photo logging, supplement timing rules, an appraisal-based check-in, PHQ-2/GAD-2 screening.
 
 ### Privacy
 - All personal data is **encrypted on the device** (AES-GCM, non-extractable key). There's no backend database yet.
-- Camera and microphone are analysed **in the browser**; only text and a mood label are sent to the AI.
+- Camera and microphone are analysed **in the browser**. The AI coach only receives text, and **you choose how much**: *AI off*, *Chat only* (default: just the messages you say or type) or *Chat + health summary* (also name, conditions, meals, WHOOP scores, menopause stage, consented hormone details). Open **Progress → Your data & privacy** to switch, and to see exactly what was sent this session.
+- Full write-up of bias, harms and mitigations: [ETHICS.md](ETHICS.md).
 - Ethnicity and hormone details are **optional and consented**, and used only for context, never for scoring.
 
 ---

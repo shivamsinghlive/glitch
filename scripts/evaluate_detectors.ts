@@ -5,13 +5,22 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { evaluateNightSweats, evaluateOvulation } from "../client/src/lib/detectorEvaluation";
+import { analyzeNightSweats, analyzeOvulation, evaluateNightSweats, evaluateOvulation, evaluateSensorRobustness, evaluateTriggers } from "../client/src/lib/detectorEvaluation";
+import { evaluatePlanner, evaluateRetrieval } from "../client/src/lib/ragEvaluation";
 
 const OUT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "client", "src", "lib", "models", "detectorEvaluation.json");
 const result = {
   kind: "simulated ground truth (stress test, not clinical validation)",
   nightSweat: evaluateNightSweats(),
   ovulation: evaluateOvulation(),
+  sensorRobustness: evaluateSensorRobustness(),
+  scorecards: {
+    nightSweat: analyzeNightSweats(),
+    ovulation: analyzeOvulation(),
+    triggers: evaluateTriggers(),
+    retrieval: evaluateRetrieval(),
+    planner: evaluatePlanner(),
+  },
 };
 fs.writeFileSync(OUT, JSON.stringify(result, null, 2) + "\n");
 console.log(JSON.stringify(result, null, 2));

@@ -4,7 +4,7 @@
  * on-device (face via camera, tone via mic, plus your words) and adapts how it talks. The Perlin
  * mood orb shows what it's picking up. Camera frames and audio never leave the phone.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useSyncExternalStore, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { nanoid } from "nanoid";
 import { Camera, CameraOff, ExternalLink, Mic, Send, Trash2, Undo2, Volume2, VolumeX, X } from "lucide-react";
@@ -17,6 +17,8 @@ import { useFaceEmotion } from "@/hooks/useFaceEmotion";
 import { useVoice } from "@/hooks/useVoice";
 import { fuseMood, LABEL_EMOJI, LABEL_CENTROID, type MoodLabel, type MoodRead } from "@/lib/emotion";
 import { buildSystemPrompt, parseCoachResponse, enforceBpSafety } from "@/lib/coachAgent";
+import { getAiMode, setAiMode, subscribeAiPrivacy } from "@/lib/aiPrivacy";
+import { evidenceBlock, evidenceForQuestion } from "@/lib/evidence";
 import { coachCompletion } from "@/lib/aiService";
 import { LIFE_STAGES } from "@/lib/lifeStage";
 import { useMenopauseInsights } from "@/hooks/useMenopauseInsights";
@@ -127,12 +129,14 @@ export default function CoachChat({ open, onClose, initialPrompt, onPromptUsed, 
     else speak(text, id);
   }
 
-  function context() {
+  function context(question = "") {
     const wh = profile?.womensHealth;
     const cycling = tracksOvulation(profile);
     const phase = cycling ? h.cycle?.currentPhase ?? getCyclePhase(getCycleDay(wh!.lastPeriodDate, wh!.cycleLength), wh!.cycleLength) : null;
     const lastCheck = appraisalLog[appraisalLog.length - 1];
     return buildSystemPrompt({
+      minimal: getAiMode() !== "full",
+      evidence: (() => { const ps = evidenceForQuestion(question); return ps.length ? evidenceBlock(ps) : undefined; })(),
       firstName: profile?.name.split(" ")[0] ?? "there",
       goal: GOAL_TEXT[profile?.goal ?? "maintain"],
       lifeStage: wh?.cycleStatus === "no" && wh.noCycleReason ? LIFE_STAGES[wh.noCycleReason].label : undefined,
@@ -165,7 +169,7 @@ export default function CoachChat({ open, onClose, initialPrompt, onPromptUsed, 
 
     const history = [...chatMessages, userMsg].slice(-8).map((m) => ({ role: m.role, content: m.text }));
     try {
-      const raw = await coachCompletion([{ role: "system", content: context() }, ...history]);
+      const raw = await coachCompletion([{ role: "system", content: context(t) }, ...history]);
       const res = parseCoachResponse(raw);
       if (res.moodRead) setTextRead(res.moodRead);
 
@@ -323,6 +327,8 @@ export default function CoachChat({ open, onClose, initialPrompt, onPromptUsed, 
               </div>
             )}
 
+            <AiSeesChip />
+
             {/* Composer */}
             <div className="flex items-end gap-2" style={{ padding: "8px 12px 12px", borderTop: "1px solid var(--line)", background: "var(--card-bg)" }}>
               <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={1} placeholder={voice.listening ? "Listening…" : "Message Glitchy…"}
@@ -347,7 +353,7 @@ export default function CoachChat({ open, onClose, initialPrompt, onPromptUsed, 
               )}
             </div>
             <p style={{ fontSize: 10, color: MUTED, fontFamily: font, textAlign: "center", padding: "0 12px calc(8px + var(--safe-bottom))", background: "var(--card-bg)" }}>
-              Camera & voice are analysed on your phone; only text and a mood label are sent to the AI. Not medical advice.
+              Camera & voice are analysed on your phone. The AI only gets the text you choose to share. Not medical advice.
             </p>
           </div>
         </motion.div>
@@ -424,5 +430,18 @@ function IconToggle({ on, onClick, label, children }: { on: boolean; onClick: ()
       style={{ width: 38, height: 38, borderRadius: 12, border: "none", background: on ? "var(--accent)" : "var(--surface-2)", color: on ? "var(--on-accent)" : INK, display: "flex", alignItems: "center", justifyContent: "center" }}>
       {children}
     </motion.button>
+  );
+}
+
+/** One-line, always-visible statement of what the AI can see, with a one-tap way to change it. */
+function AiSeesChip() {
+  const mode = useSyncExternalStore(subscribeAiPrivacy, getAiMode, getAiMode);
+  const label = mode === "off" ? "AI is off. Nothing leaves this device." : mode === "chat" ? "The AI sees only what you say here." : "The AI also sees your health summary.";
+  const action = mode === "chat" ? { text: "Share health summary", to: "full" as const } : mode === "full" ? { text: "Share less", to: "chat" as const } : { text: "Turn on", to: "chat" as const };
+  return (
+    <div className="flex items-center justify-between gap-2" style={{ padding: "6px 14px", background: "var(--card-bg)", borderTop: "1px solid var(--line)", fontSize: 11.5, color: "var(--txt-muted)", fontFamily: "'DM Sans', sans-serif" }}>
+      <span>🔒 {label}</span>
+      <button onClick={() => setAiMode(action.to)} style={{ border: "none", background: "transparent", color: "var(--ink)", fontWeight: 700, fontSize: 11.5, textDecoration: "underline", padding: 4 }}>{action.text}</button>
+    </div>
   );
 }

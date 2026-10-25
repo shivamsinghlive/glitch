@@ -121,6 +121,7 @@ export default function MenopausePanel() {
       {/* Warm nights */}
       <div style={card}>
         <p style={{ fontSize: 14, fontWeight: 700, color: INK, fontFamily: font }}>Night sweats from WHOOP</p>
+        <p style={{ fontSize: 11.5, color: MUTED, fontFamily: font, lineHeight: 1.45, marginTop: 3 }}>A guide, not a verdict. It catches under half of real night sweats, so no flag does not mean no sweat. Trust how you felt.</p>
         {!h.connected ? (
           <>
             <p style={{ fontSize: 12.5, color: MUTED, fontFamily: font, lineHeight: 1.5, margin: "6px 0 10px" }}>WHOOP measures your skin temperature and wake-ups every night. Glitch flags nights that run hot <i>and</i> broken: likely night sweats.</p>

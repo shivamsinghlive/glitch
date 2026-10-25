@@ -322,11 +322,11 @@ function SleepDonut({ light, deep, rem, awake, wakeUps }: { light: number; deep:
   const asleep = (deep + rem + light) / 60;
   return (
     <div style={{ ...tile, marginTop: 10, display: "flex", alignItems: "center", gap: 12 }}>
-      <div style={{ position: "relative", width: 120, height: 120, flexShrink: 0 }}>
+      <div role="img" aria-label={`Sleep stages: deep ${Math.round(deep)} min, REM ${Math.round(rem)} min, light ${Math.round(light)} min, awake ${Math.round(awake)} min`} style={{ position: "relative", width: 120, height: 120, flexShrink: 0 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+          <PieChart accessibilityLayer={false} role="presentation">
             <Pie data={data} dataKey="v" innerRadius={40} outerRadius={56} paddingAngle={3} stroke="none" startAngle={90} endAngle={-270}>
-              {data.map((s) => <Cell key={s.k} fill={s.c} />)}
+              {data.map((s) => <Cell key={s.k} fill={s.c} aria-label={`${s.k}: ${Math.round(s.v)} minutes`} />)}
             </Pie>
           </PieChart>
         </ResponsiveContainer>

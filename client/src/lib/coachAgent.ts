@@ -43,7 +43,7 @@ export interface CoachResponse {
 }
 
 /** Only accept citations from reputable health/medical/research domains. */
-const TRUSTED_SOURCE = /^(https:\/\/)([a-z0-9-]+\.)*(nih\.gov|ncbi\.nlm\.nih\.gov|pubmed\.ncbi\.nlm\.nih\.gov|who\.int|cdc\.gov|uspreventiveservicestaskforce\.org|mayoclinic\.org|nhs\.uk|menopause\.org|acog\.org|heart\.org|health\.harvard\.edu|stanford\.edu|frontiersin\.org|mdpi\.com|springer\.com|orthoinfo\.org|niams\.nih\.gov)(\/|$)/i;
+const TRUSTED_SOURCE = /^(https:\/\/)([a-z0-9-]+\.)*(nih\.gov|ncbi\.nlm\.nih\.gov|academic\.oup\.com|biomedcentral\.com|acu\.edu\.au|pubmed\.ncbi\.nlm\.nih\.gov|who\.int|cdc\.gov|uspreventiveservicestaskforce\.org|mayoclinic\.org|nhs\.uk|menopause\.org|acog\.org|heart\.org|health\.harvard\.edu|stanford\.edu|frontiersin\.org|mdpi\.com|springer\.com|orthoinfo\.org|niams\.nih\.gov)(\/|$)/i;
 
 /** Parse the model's JSON, keeping valid actions and dropping invalid ones individually. */
 export function parseCoachResponse(raw: string): CoachResponse {
@@ -82,6 +82,8 @@ export function parseCoachResponse(raw: string): CoachResponse {
 }
 
 export interface CoachContext {
+  /** Privacy mode "chat": the model gets no personal or health data, only the conversation. */
+  minimal?: boolean;
   firstName: string;
   goal: string;
   lifeStage?: string;
@@ -98,20 +100,25 @@ export interface CoachContext {
   nudges?: string[];
   supplements?: string[];
   localTime: string;
+  /** Retrieved evidence passages relevant to this question (public, safe in any privacy mode) */
+  evidence?: string;
 }
 
 export function buildSystemPrompt(c: CoachContext): string {
   const eaten = c.todayMeals.reduce((a, m) => ({ cal: a.cal + m.calories, p: a.p + m.protein }), { cal: 0, p: 0 });
   const tone = c.mood ? TONE_GUIDE[c.mood.label] : TONE_GUIDE.neutral;
-  return `You are Glitchy, the warm, witty, emotionally intelligent health coach inside the Glitch app. You talk like a supportive friend who knows nutrition, fitness, sleep and stress science, not like a robot. Keep replies short (1–3 sentences, max ~60 words) unless asked for detail. Use the user's first name occasionally, not every message.
-
-USER
+  const userBlock = c.minimal
+    ? `USER\n- Privacy mode: the user has chosen NOT to share any personal or health data with you. You know nothing about them beyond what they say in this conversation and the local time. Never guess their name, life stage, conditions or numbers; ask if it matters.\n- Local time: ${c.localTime}\n- Mood read (on-device face/voice/text): ${c.mood ? `${c.mood.label}` : "unknown"}`
+    : `USER
 - First name: ${c.firstName}
 - Goal: ${c.goal}${c.lifeStage ? `\n- Life stage: ${c.lifeStage}` : ""}${c.conditions?.length ? `\n- Conditions: ${c.conditions.join(", ")}` : ""}
 - Local time: ${c.localTime}
 - Today so far: ${eaten.cal} kcal, ${eaten.p} g protein${c.calorieTarget ? ` (targets ${c.calorieTarget} kcal / ${c.proteinTarget} g protein)` : ""}
 - Today's meals: ${c.todayMeals.length ? c.todayMeals.map((m) => `${m.type}: ${m.name} (${m.calories} kcal)`).join("; ") : "none logged"}${c.body ? `\n- Body (WHOOP): recovery ${c.body.recovery ?? "?"}%, stress ${c.body.stress ?? "?"}, energy ${c.body.energy ?? "?"}%, sleep ${c.body.sleep ?? "?"}%${c.body.phase ? `, cycle phase ${c.body.phase}` : ""}` : ""}${c.lastCheckIn ? `\n- Last check-in: ${c.lastCheckIn}` : ""}${c.menopause ? `\n- Menopause: ${c.menopause.stage}; ${c.menopause.flashesToday} hot flashes today; ${c.menopause.nightSweatNights14} likely night-sweat nights in 14 days${c.menopause.topTrigger ? `; strongest personal trigger: ${c.menopause.topTrigger}` : ""}. If they mention a hot flash, empathise and suggest cooling strategies (layers, cold water, slow breathing); for treatment questions, encourage a clinician conversation.` : ""}
-${c.hormones ? `- Hormones/contraception (shared with consent): ${c.hormones}\n` : ""}${c.supplements?.length ? `- Supplements: ${c.supplements.join("; ")}\n` : ""}${c.nudges?.length ? `- Things worth gently raising today (appraisal-framed: a manageable challenge, never a failure; at most one per reply, only if relevant): ${c.nudges.join(" | ")}\n` : ""}- Mood read (on-device face/voice/text): ${c.mood ? `${c.mood.label} (from ${c.mood.sources.join("+")})` : "unknown"}
+${c.hormones ? `- Hormones/contraception (shared with consent): ${c.hormones}\n` : ""}${c.supplements?.length ? `- Supplements: ${c.supplements.join("; ")}\n` : ""}${c.nudges?.length ? `- Things worth gently raising today (appraisal-framed: a manageable challenge, never a failure; at most one per reply, only if relevant): ${c.nudges.join(" | ")}\n` : ""}- Mood read (on-device face/voice/text): ${c.mood ? `${c.mood.label} (from ${c.mood.sources.join("+")})` : "unknown"}`;
+  return `You are Glitchy, the warm, witty, emotionally intelligent health coach inside the Glitch app. You talk like a supportive friend who knows nutrition, fitness, sleep and stress science, not like a robot. Keep replies short (1–3 sentences, max ~60 words) unless asked for detail. Use the user's first name occasionally, not every message.
+
+${userBlock}
 
 TONE: ${tone}
 
@@ -150,7 +157,7 @@ SAFETY
 
 Respond ONLY with JSON:
 {"reply": "...", "mood_read": {"valence": -1..1, "arousal": 0..1} or null, "sources": [{"title":"...","url":"https://..."}], "actions": [{"type":"log_meal","meal":{"name":"...","type":"Breakfast|Lunch|Dinner|Snack","calories":0,"protein":0,"carbs":0,"fats":0,"fiber":0,"sugar":0}} | {"type":"remove_meal","name":"..."} | {"type":"log_hot_flash","intensity":2,"night":false,"count":1} | {"type":"log_bp","systolic":120,"diastolic":80} | {"type":"log_mood","mood":3} | {"type":"log_period_start","date":"YYYY-MM-DD"}]}
-mood_read is YOUR read of their emotional tone from their words (null if neutral/unclear). "sources" is [] unless the reply makes a health claim worth backing with a reputable citation.`;
+mood_read is YOUR read of their emotional tone from their words (null if neutral/unclear). "sources" is [] unless the reply makes a health claim worth backing with a reputable citation.${c.evidence ? `\n\nEVIDENCE (retrieved for this question). For health claims about exercise, bone, muscle or nutrition, rely on these passages only, say so plainly, and put the matching source URLs in "sources":\n${c.evidence}` : ""}`;
 }
 
 /**
