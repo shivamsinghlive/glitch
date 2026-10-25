@@ -10,6 +10,7 @@ import DailyCheckIn from "@/components/DailyCheckIn";
 import EvidenceSource from "@/components/EvidenceSource";
 import LifeStagePanel from "@/components/LifeStagePanel";
 import LifeStagePopulation from "@/components/LifeStagePopulation";
+import SleepEstimateCard from "@/components/SleepEstimateCard";
 import { ResearchGap } from "./CycleHome";
 
 const font = "'DM Sans', sans-serif";
@@ -47,7 +48,8 @@ export default function StageHome({ onTalk }: { onTalk: (prompt?: string) => voi
         </div>
       )}
 
-      <DailyCheckIn metrics={["mood", "energy", "sleepQuality", "cravings"]} cycleDay={0} />
+      <DailyCheckIn metrics={["mood", "energy", "sleepQuality", "sleepHours", "cravings"]} cycleDay={0} />
+      {perinatal && <SleepEstimateCard stage={stage === "pregnant" ? "pregnant" : "breastfeeding"} />}
 
       {perinatal && (
         <div style={{ ...tile, border: persistentLow ? "1.5px solid oklch(0.77 0.17 55)" : undefined }}>

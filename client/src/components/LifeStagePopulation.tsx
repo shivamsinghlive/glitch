@@ -6,6 +6,7 @@
  */
 import { useState } from "react";
 import data from "@/lib/models/nhanesLifeStages.json";
+import InfoToggle from "./InfoToggle";
 
 type StageKey = "cycling" | "pregnant" | "breastfeeding" | "post";
 type Cell = { n: number; est?: number; lo?: number; hi?: number; suppressed: boolean };
@@ -61,12 +62,16 @@ export default function LifeStagePopulation({ highlight }: { highlight?: StageKe
           );
         })}
       </div>
-      <p style={{ fontSize: 11, color: "var(--txt-muted)", marginTop: 8 }}>Dot = estimate · line = 95% CI · dashed = cycling women. Tap or hover a row for adjusted odds ratios.</p>
-
-      <p style={{ fontSize: 13, lineHeight: 1.5, color: "var(--ink-2)", marginTop: 10 }}>
-        <b style={{ color: "var(--ink)" }}>What it means:</b> after adjusting for age and smoking and correcting for multiple comparisons, no stage clearly differed from cycling women on depression or sleep. The strongest hint: breastfeeding women report short sleep more often (OR 1.9, q = 0.06). Averages barely tell stages apart, let alone individual women, which is why Glitch learns your own pattern.
+      <p style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--ink)", marginTop: 10, fontWeight: 600 }}>
+        Life stages barely differ on average, so Glitch learns your own pattern.
       </p>
-      <p style={{ fontSize: 11, color: "var(--txt-muted)", marginTop: 6 }}>Cross-sectional, so associations only. Breastfeeding stands in for postpartum (NHANES has no postpartum flag).</p>
+      <InfoToggle>
+        <p><b>Reading the chart:</b> dot = survey-weighted estimate, line = 95% confidence interval, dashed line = cycling women. Hover or tap a row for the adjusted odds ratio.</p>
+        <p><b>Model:</b> survey-weighted logistic regression of each outcome on life stage (cycling women as reference), adjusted for age, age² and smoking, with design-based standard errors and Benjamini–Hochberg correction across 11 comparisons. Sensitivity checks add BMI, restrict ages, and use a second postpartum proxy.</p>
+        <p><b>Result:</b> no stage clearly differed from cycling women on depression or sleep after correction. Strongest hint: breastfeeding mothers report short sleep more often (OR 1.87, 95% CI 1.18–2.94, q = 0.06), consistent across all sensitivity checks.</p>
+        <p><b>How we use it:</b> these stage rates are the starting point for your personal sleep estimate, which your own nights then update.</p>
+        <p><b>Limits:</b> cross-sectional, so associations only. Breastfeeding stands in for postpartum (NHANES has no postpartum flag). Cells with too few women are suppressed.</p>
+      </InfoToggle>
     </div>
   );
 }

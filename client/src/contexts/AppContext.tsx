@@ -177,6 +177,8 @@ export interface CycleSymptomEntry {
   sleepQuality: number; // 1-5
   /** How strong the workout felt, 1-5 (optional; only on days she trained) */
   workout?: number;
+  /** Hours slept last night (optional) */
+  sleepHours?: number;
   notes: string;
 }
 

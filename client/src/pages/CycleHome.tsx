@@ -12,6 +12,9 @@ import DailyCheckIn from "@/components/DailyCheckIn";
 import EvidenceSource from "@/components/EvidenceSource";
 import LifeStagePopulation from "@/components/LifeStagePopulation";
 import { adviceForToday, analyzePhasePatterns, daysSinceLastLog, describeFinding, PHASES, PHASE_LABEL, PHASE_METRICS } from "@/lib/phasePatterns";
+import { combinePatterns, shrinkPhaseEffects } from "@/lib/personalEstimate";
+import InfoToggle from "@/components/InfoToggle";
+import SleepEstimateCard from "@/components/SleepEstimateCard";
 
 const font = "'DM Sans', sans-serif";
 const tile: React.CSSProperties = { background: "var(--card-bg)", borderRadius: 22, padding: 16, marginTop: 14 };
@@ -29,7 +32,8 @@ export default function CycleHome({ onTalk, onWearable }: { onTalk: (prompt?: st
   const phaseOf = (d: number) => getCyclePhase(d, len);
   const daysToPeriod = Math.max(0, Math.ceil((getNextPeriodDate(wh.lastPeriodDate, len).getTime() - Date.now()) / 86_400_000) % len);
 
-  const report = useMemo(() => analyzePhasePatterns(cycleSymptomLog, phaseOf), [cycleSymptomLog, len]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Both checks: permutation test on her data + population-informed Bayesian estimate (lib/personalEstimate.ts)
+  const report = useMemo(() => combinePatterns(analyzePhasePatterns(cycleSymptomLog, phaseOf), shrinkPhaseEffects(cycleSymptomLog, phaseOf)), [cycleSymptomLog, len]); // eslint-disable-line react-hooks/exhaustive-deps
   const advice = adviceForToday(phase, report);
   const gap = daysSinceLastLog(cycleSymptomLog);
   const first = profile!.name.split(" ")[0];
@@ -91,7 +95,7 @@ export default function CycleHome({ onTalk, onWearable }: { onTalk: (prompt?: st
       </div>
 
       <div id="checkin">
-        <DailyCheckIn metrics={["energy", "mood", "cravings", "cramps", "sleepQuality", "workout"]} cycleDay={day} accent={accent} />
+        <DailyCheckIn metrics={["energy", "mood", "cravings", "cramps", "sleepQuality", "sleepHours", "workout"]} cycleDay={day} accent={accent} />
       </div>
 
       {/* Her pattern */}
@@ -102,25 +106,30 @@ export default function CycleHome({ onTalk, onWearable }: { onTalk: (prompt?: st
         </div>
         {report.tested.length === 0 ? (
           <p style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--ink-2)", marginTop: 8 }}>
-            Check in for a few weeks and Glitch will test whether your energy, mood, cravings or strength really change by phase, for you.
+            Check in for a few weeks and Glitch will learn whether your energy, mood, cravings or strength really change by phase, for you.
           </p>
         ) : (
           <>
-            <PatternGrid report={report} accent={accent} />
-            {report.significant.length > 0 ? (
-              <ul style={{ marginTop: 10, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
-                {report.significant.slice(0, 5).map((f) => (
-                  <li key={f.metric + f.phase} style={{ fontSize: 13, lineHeight: 1.45 }}>
-                    {f.harder ? "↘︎" : "↗︎"} {describeFinding(f)} <span style={{ color: "var(--txt-muted)", fontSize: 11 }}>q={f.qValue.toFixed(3)}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 10 }}>Tested {report.tested.length} comparisons: no clear phase effect yet. That's a real answer, not a gap.</p>
-            )}
-            <p style={{ fontSize: 11, color: "var(--txt-muted)", marginTop: 8, lineHeight: 1.45 }}>
-              Highlighted cells passed a permutation test with false-discovery-rate control (q &lt; 0.10) and differ by ≥ 0.5 points. Patterns in your logs, not proof of cause.
+            <p style={{ fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>
+              {report.significant.length
+                ? [...report.significant].sort((a, b) => Number(b.phase === phase) - Number(a.phase === phase)).slice(0, 2).map((f) => `${f.label} ${f.diff < 0 ? "lower" : "higher"} in your ${PHASE_LABEL[f.phase]}`).join(" · ")
+                : "No clear phase effect yet. That's a real answer: train as planned."}
             </p>
+            <PatternGrid report={report} accent={accent} />
+            <InfoToggle>
+              {report.significant.map((f) => {
+                const po = f.posterior!;
+                return (
+                  <p key={f.metric + f.phase}>
+                    <b>{f.label}, {PHASE_LABEL[f.phase]}:</b> your logs {f.diff > 0 ? "+" : ""}{f.diff.toFixed(1)} pts → combined estimate {po.mean > 0 ? "+" : ""}{po.mean.toFixed(1)} (95% CrI {po.lo.toFixed(1)} to {po.hi.toFixed(1)}), {Math.round(po.weight * 100)}% from your data · permutation q = {f.qValue.toFixed(3)} · {f.phaseDays} vs {f.otherDays} days
+                  </p>
+                );
+              })}
+              {!report.significant.length && <p>Tested {report.tested.length} metric × phase comparisons; none passed both checks.</p>}
+              <p><b>Check 1, your data alone:</b> permutation test (1,000 shuffles of phase labels) for each metric × phase, Benjamini–Hochberg false-discovery control across all comparisons; needs q &lt; 0.10 and a difference ≥ 0.5 points.</p>
+              <p><b>Check 2, research + your data:</b> Bayesian normal–normal model. Starting belief: no phase effect (McNulty 2020 meta-analysis of 78 studies found only a trivial average effect and recommends personalising) <EvidenceSource id="cycle-phase-performance-small" />, except a small rise in luteal cravings (energy intake meta-analysis) <EvidenceSource id="luteal-energy-intake-higher" />. Assumed spread between women τ = 0.5 points (results also computed at 0.3 and 1.0). Few days → leans on research; many → yours.</p>
+              <p><b>Shown only when both agree.</b> Highlighted cells passed both; numbers are your average score (1–5) in that phase. Patterns in your logs, not proof of cause; phases are calendar estimates.</p>
+            </InfoToggle>
           </>
         )}
         {report.loggedDays < 20 && (
@@ -130,6 +139,7 @@ export default function CycleHome({ onTalk, onWearable }: { onTalk: (prompt?: st
         )}
       </div>
 
+      <SleepEstimateCard stage="cycling" />
       <LifeStagePopulation highlight="cycling" />
       <ResearchGap />
 

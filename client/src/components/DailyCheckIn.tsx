@@ -8,15 +8,16 @@ import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { useApp, type CycleSymptomEntry } from "@/contexts/AppContext";
 
-export type CheckInMetric = "energy" | "mood" | "cravings" | "cramps" | "workout" | "sleepQuality";
+export type CheckInMetric = "energy" | "mood" | "cravings" | "cramps" | "workout" | "sleepQuality" | "sleepHours";
 
-const ROWS: Record<CheckInMetric, { label: string; low: string; high: string; faces: string[] }> = {
+const ROWS: Record<CheckInMetric, { label: string; low: string; high: string; faces: string[]; values?: number[] }> = {
   energy: { label: "Energy", low: "drained", high: "buzzing", faces: ["🪫", "😮‍💨", "🙂", "😃", "⚡"] },
   mood: { label: "Mood", low: "low", high: "great", faces: ["😞", "😕", "😐", "🙂", "😄"] },
   cravings: { label: "Cravings", low: "none", high: "intense", faces: ["🥗", "🍎", "🍪", "🍫", "🍕"] },
   cramps: { label: "Cramps / pain", low: "none", high: "severe", faces: ["😌", "🙂", "😣", "😖", "😫"] },
   workout: { label: "Workout felt", low: "weak", high: "strong", faces: ["🐢", "😓", "💪", "🔥", "🦾"] },
   sleepQuality: { label: "Sleep", low: "awful", high: "great", faces: ["😵", "🥱", "😐", "😊", "😴"] },
+  sleepHours: { label: "Hours slept", low: "", high: "", faces: ["<6", "6–7", "7–8", "8–9", "9+"], values: [5.5, 6.5, 7.5, 8.5, 9.5] },
 };
 
 const font = "'DM Sans', sans-serif";
@@ -30,7 +31,8 @@ export default function DailyCheckIn({ metrics, cycleDay, accent = "var(--accent
     existing ? Object.fromEntries(metrics.map((m) => [m, (existing as unknown as Record<string, number | undefined>)[m] || undefined])) : {});
   const [saved, setSaved] = useState(!!existing);
 
-  const required = metrics.filter((m) => m !== "workout");
+  const optional: CheckInMetric[] = ["workout", "sleepHours"];
+  const required = metrics.filter((m) => !optional.includes(m));
   const ready = required.every((m) => vals[m]);
 
   function save() {
@@ -39,6 +41,7 @@ export default function DailyCheckIn({ metrics, cycleDay, accent = "var(--accent
       mood: vals.mood ?? 0, energy: vals.energy ?? 0, cravings: vals.cravings ?? 0, cramps: vals.cramps ?? 0, sleepQuality: vals.sleepQuality ?? 0,
       stress: existing?.stress ?? 0, bloating: existing?.bloating ?? 0,
       ...(vals.workout ? { workout: vals.workout } : {}),
+      ...(vals.sleepHours ? { sleepHours: vals.sleepHours } : {}),
     };
     addCycleSymptomEntry(e);
     setSaved(true);
@@ -57,15 +60,15 @@ export default function DailyCheckIn({ metrics, cycleDay, accent = "var(--accent
             <div key={m}>
               <div className="flex items-baseline justify-between">
                 <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>{r.label}{m === "workout" && <span style={{ fontWeight: 500, color: "var(--txt-muted)" }}> (if you trained)</span>}</span>
-                <span style={{ fontSize: 11, color: "var(--txt-muted)" }}>{r.low} → {r.high}</span>
+                {r.low && <span style={{ fontSize: 11, color: "var(--txt-muted)" }}>{r.low} → {r.high}</span>}
               </div>
               <div role="radiogroup" aria-label={r.label} className="flex gap-1.5" style={{ marginTop: 5 }}>
                 {r.faces.map((f, i) => {
-                  const v = i + 1, on = vals[m] === v;
+                  const v = r.values?.[i] ?? i + 1, on = vals[m] === v;
                   return (
-                    <motion.button key={v} whileTap={{ scale: 0.9 }} role="radio" aria-checked={on} aria-label={`${r.label} ${v} of 5`}
-                      onClick={() => { setVals((p) => ({ ...p, [m]: p[m] === v && m === "workout" ? undefined : v })); setSaved(false); }}
-                      style={{ flex: 1, height: 40, borderRadius: 12, border: on ? `2px solid ${accent}` : "1.5px solid var(--line)", background: on ? `color-mix(in oklch, ${accent} 16%, transparent)` : "transparent", fontSize: 19 }}>
+                    <motion.button key={v} whileTap={{ scale: 0.9 }} role="radio" aria-checked={on} aria-label={r.values ? `${r.label} ${f}` : `${r.label} ${v} of 5`}
+                      onClick={() => { setVals((p) => ({ ...p, [m]: p[m] === v && optional.includes(m) ? undefined : v })); setSaved(false); }}
+                      style={{ flex: 1, height: 40, borderRadius: 12, border: on ? `2px solid ${accent}` : "1.5px solid var(--line)", background: on ? `color-mix(in oklch, ${accent} 16%, transparent)` : "transparent", fontSize: r.values ? 13 : 19, fontWeight: r.values ? 700 : 400, color: "var(--ink)" }}>
                       {f}
                     </motion.button>
                   );

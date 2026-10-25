@@ -183,6 +183,7 @@ export function generateDemoCheckIns(o: { lastPeriodDate: string; cycleLength: n
       stress: clamp5(2.6 + 0.4 * lut + n()),
       bloating: clamp5(1.6 + 1.0 * lut + 1.0 * men + n() * 0.6),
       sleepQuality: clamp5(3.4 - 0.4 * lut + n()),
+      sleepHours: Math.round((7.2 - 0.5 * lut + n() * 0.9) * 2) / 2,
       notes: "",
     });
   }
