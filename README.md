@@ -1,9 +1,10 @@
 # Glitch — find the bug, fix your health
 
-A voice-first health coach for women in **perimenopause and menopause**. It uses WHOOP data to track
-hot flashes, night sweats, broken sleep, HRV and blood pressure, then turns them into simple visuals,
-alerts and a doctor-ready summary. Built for Hackachusetts 2026 (Healthcare track H1: *wearable data
-into better care*).
+A voice-first health companion for women at **every life stage**: periods, pregnancy, postpartum and
+menopause. A 20-second daily check-in feeds an n-of-1 statistical test that learns *her* pattern by cycle phase
+(energy, mood, cravings, cramps, workout strength) instead of repeating textbook averages. NHANES population
+analyses and a PubMed-verified evidence library back every claim. No wearable required (WHOOP is optional).
+Built for BU Spark! DS+X Hackathon 2026 (HealthHack).
 
 > Wellness insights, not a diagnosis. Treatment decisions belong with a clinician.
 
@@ -56,8 +57,9 @@ Open **http://localhost:3000** in Chrome.
 
 ### 5. Try the demo
 
-1. On the first screen, tap **"Here for menopause support?"**: a 1-minute setup.
-2. On Home, tap **Connect WHOOP → demo**. This loads 90 days of realistic sample data (no band needed).
+1. On the first screen, tap **"Quick start for women"**, enter a name and age, pick **I have periods**.
+2. On Home, tap **Load 12 weeks of demo check-ins** (synthetic) to see the phase-pattern analysis.
+   For menopause, pick *Perimenopause or menopause* instead and tap **Connect WHOOP → demo**.
 3. Tap the **mic** and say *"I'm having a hot flash"* or *"My blood pressure is 132 over 84"*.
 4. Tap the 📄 icon (top right) for the **doctor summary**.
 

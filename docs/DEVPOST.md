@@ -3,79 +3,95 @@
 **Track:** HealthHack · **Also for:** BU Libraries Data Ethics & Data Literacy Prize
 
 ## Inspiration
-More than a billion women worldwide are in or past menopause. Hot flashes, broken sleep, low mood and
-bone loss are common, yet symptoms often go untracked and get dismissed in short appointments. Women are
-told "it's just age". We wanted to give them data they can trust and bring to their doctor, and we wanted to
-be honest about what the data does and doesn't show.
+Medicine has studied women's bodies far less than men's. In neuroscience, male-only animal studies outnumbered
+female-only ones 5.5 to 1. Women have adverse drug reactions nearly twice as often as men, and in 2013 the FDA
+halved the zolpidem (Ambien) dose for women after learning they clear it more slowly. The rete ovarii, a structure
+attached to the ovary, was dismissed as a leftover for about 150 years. New mouse research suggests it's active.
+
+One of us started lifting and kept hitting a wall. Some weeks she felt strong. In the days before her period she felt
+low, couldn't lift as much, craved everything and dropped her routine, then felt guilty for "failing". Nobody had told
+her that her body changes across the month, or how hers does. That gap gets bigger in pregnancy, after birth and
+around menopause.
 
 ## What it does
-Glitch is a voice-first menopause companion.
-- **Talk, don't type.** Say "I'm having a hot flash" or "my blood pressure is 132 over 84" and it's logged.
-- **Your body, at a glance.** Hot flashes, sleep, HRV, possible night sweats (skin temperature plus broken sleep), BP and mood from a wearable and voice.
-- **Your triggers, tested statistically.** An n-of-1 analysis of your own logs tells you which triggers show a real link, which don't yet, and how many more days of logging it would take.
-- **What US women show.** Population evidence from NHANES on how menopause relates to bone, sleep, mood and blood pressure, with a Raw / Same-age toggle that teaches confounding.
-- **Doctor summary.** A one-page printable report with weekly trends, statistically supported triggers and questions to ask.
+Glitch is a voice-first health companion for women at every life stage. No wearable is needed.
+- **Pick your stage:** periods, pregnancy, postpartum, or perimenopause/menopause. Home adapts to each.
+- **A 20-second daily check-in:** energy, mood, cravings, cramps, sleep, and how strong your workout felt.
+- **Your pattern, not the textbook's:** Glitch tests your own check-ins by cycle phase and only tells you about differences that hold up statistically. For example: "Mood is 1.2 points lower in your luteal phase (33 days logged)." With no clear pattern it says "train as planned". Many women don't follow the textbook.
+- **Advice from your data:** lighter sessions, planned snacks or an easier day, only when your own logs justify it, each with a PubMed source.
+- **Welcome back, without guilt:** after a missed week, Glitch links it to your phase when relevant and offers a 10-minute restart.
+- **Pregnancy and postpartum:** safe-movement and nutrition guidance, plus mood check-ins. If low mood keeps showing up, Glitch says so gently and links the National Maternal Mental Health Hotline.
+- **Menopause:** hot flashes, sleep, blood pressure, bone health, tested personal triggers, and a printable doctor summary.
+- **Talk, don't type:** say "I'm having a hot flash" or "I missed a week, help me restart".
 
 ## Data science
-Three levels of analysis, each feeding a feature:
+Four analyses, each feeding a feature.
 
-**1. Population: NHANES 2013–2018 (CDC), 1,941 women aged 40–59**
-- **Method:** survey-weighted logistic and linear regression with design-based (Taylor linearisation) variance, adjusted for age, age², BMI and smoking. Risk differences come from predictive margins, with Benjamini–Hochberg FDR correction across 8 outcomes.
-- **Robustness:** three sensitivity analyses (adding race, income and education; ages 45–55 only; never-HRT users), per-group models with interaction tests, and small-cell suppression.
-- **Finding:** femoral-neck bone density is 0.056 g/cm² lower after menopause (95% CI 0.022–0.090, q = 0.015) and holds in every sensitivity check. That's why Glitch puts strength and impact training first.
-- **Null finding:** raw hypertension is 15.8 points higher after menopause, but at the same age the difference is −0.2 points (OR 0.99). Ageing explains the gap. We report this null result instead of hiding it.
-- **Validation:** our estimator matches the `samplics` survey library exactly, and its standard errors agree with a delete-one-PSU jackknife to within 0.3%.
+**1. Population across life stages: NHANES 2013–2018 (CDC), 4,163 women aged 20–59**
+- **Groups:** cycling (n = 3,094, the reference), pregnant (190), breastfeeding as a postpartum proxy (118), and natural post-menopause (761). Surgical menopause and unknown status were excluded, with the full exclusion flow reported.
+- **Method:** survey-weighted logistic and linear regression with design-based variance, adjusted for age, age² and smoking, with Benjamini–Hochberg FDR correction across 11 contrasts. Sensitivity analyses add BMI, restrict to matched ages, and use a second postpartum proxy (birth in the past 12 months). Cells below NCHS reliability thresholds are suppressed.
+- **Finding:** after correction, no stage clearly differs from cycling women on depression or sleep. The strongest hint is that breastfeeding women report short sleep more often (OR 1.87, 95% CI 1.18–2.94, q = 0.06). This holds in all three sensitivity analyses.
+- **Why it matters:** population averages barely separate life stages, let alone individual women. That is the case for learning each woman's own pattern.
 
-**2. Prediction: hot-flash risk (TSHS cohort, n = 375)**
-- **Model:** logistic regression compared against gradient boosting and a baseline on shared repeated stratified CV folds.
-  - AUC 0.75 with hormone labs (held-out 95% CI 0.70–0.80), significantly better than gradient boosting.
-  - Brier score 0.18 vs 0.22 with no skill. Calibration slope 0.92–0.94.
-- **Fairness:** race and education are not model inputs, but we audited performance by group anyway and published the gaps (see Ethics).
+**2. Personal: n-of-1 patterns by cycle phase**
+- **Method:** for every metric × phase, compare days in that phase with all other days using a two-sided permutation test, with BH-FDR across all comparisons. A pattern is shown only if q < 0.10 and the difference is at least 0.5 points.
+- **Safeguards:** at least 4 logged days per side, seeded tests (results are reproducible), and the advice text depends only on significant findings.
+- **Tests:** unit tests check that a planted pattern is found and that a flat log produces no false findings.
+- The same approach powers the menopause trigger analysis: a Poisson rate ratio with 95% CI, a permutation test and BH correction. Simulations cap the false-trigger rate at 9% and estimate the days needed to detect a trigger.
 
-**3. Personal: n-of-1 trigger analysis**
-- **Method:** a Poisson rate ratio with 95% CI for each candidate trigger, plus a permutation test and BH correction. A trigger is flagged only if q < 0.10 and the CI lower bound is above 1.
-- **Calibration:** simulations show the full procedure shows at least one false trigger to no more than 9% of users when no trigger is real, even with overdispersed counts.
-- **Power analysis:** the app tells each user how many days they'd need (for example, about 81 days to detect a 1.5× trigger at 3 flashes a day).
+**3. Menopause population: NHANES, 1,941 women aged 40–59**
+- **Method:** survey-weighted regression adjusted for age, age², BMI and smoking, with sensitivity analyses and race/ethnicity interaction tests.
+- **Finding:** femoral-neck bone density is 0.056 g/cm² lower after menopause (q = 0.015).
+- **Null finding:** raw hypertension is 15.8 points higher, but OR 0.99 at the same age.
+- **Validation:** our estimator matches the `samplics` survey library exactly, and a delete-one-PSU jackknife to within 0.3%.
 
-**Evidence library:** 28 claims backed by 44 verified PubMed papers. We audited every health claim in the app against them and rewrote the ones that overstated the evidence.
+**4. Prediction: hot-flash risk (TSHS cohort, n = 375)**
+- **Model:** logistic regression vs gradient boosting vs a baseline on shared repeated CV folds. AUC is 0.75 with hormone labs (95% CI 0.70–0.80), and the model is calibrated.
+- **Fairness:** a by-group audit is published. Race and education are never used as inputs.
+
+**Evidence library:** 41 claims backed by 66 PubMed records, each retrieved and checked against the abstract. Our claim audit rewrote 13 places where the app said more than the evidence supports. New claims were narrowed to fit their sources: we cite energy intake, not "cravings", in the luteal phase, and we label the rete ovarii work as mouse research.
 
 ## Responsibility & ethics
-- **Privacy:**
-  - Data is encrypted on the device (AES-GCM, non-extractable key) and there is no backend database.
-  - Camera and microphone are analysed in the browser.
-  - Ethnicity is never sent anywhere.
-- **Consent:** hormone and ethnicity details are optional, and "prefer not to say" is always available.
-- **Fairness:**
-  - The NHANES analysis is survey-weighted and repeated within each race/ethnicity group. No clear between-group differences were found (interaction p ≥ 0.085), and small groups are suppressed.
-  - In the hot-flash model audit, AUC is similar for African American and Caucasian women. It isn't established for women without a high-school education (n = 39), and the model card says so.
+- **Working with BU Libraries:**
+  - **Used:** PubMed (every claim), CDC NHANES (public, de-identified) and the TSHS teaching dataset.
+  - **Not used, and why:**
+    - Apple Women's Health Study: no public participant-level data, so we cite only published findings.
+    - Mintel: licensed market research, used only for framing and never shipped.
+    - Harvard Dataverse: searched, nothing suitable in time.
+- **Privacy:** data is encrypted on the device (AES-GCM) with no backend database. Camera and mic are processed locally. AI privacy modes show exactly what's sent.
+- **No myths:** we never tell a woman she'll be weaker in her luteal phase. Research finds only small, inconsistent average effects, so Glitch tests her own data and says "no clear pattern" when that's the answer.
 - **Harm mitigation:**
-  - The app says "association, not cause" and "not a diagnosis".
-  - A hard-coded BP crisis message and 988 crisis messaging work independently of the AI.
-  - AI citations are restricted to trusted sources, backed by the verified evidence library.
-- **Transparency:** model cards, a "How we know" sheet with null results, limitations, and reproducible scripts with fixed seeds.
-- **Who we might miss:** people after surgical menopause, trans and nonbinary people, non-US populations, and people without wearables. These are documented in [ETHICS.md](ETHICS.md).
+  - No calorie deficit in pregnancy or postpartum.
+  - Persistent low mood triggers a referral to the perinatal hotline.
+  - PMDD and endometriosis prompts point to a clinician.
+  - 988 crisis messaging works independently of the AI.
+  - "Association, not cause" and "not a diagnosis" appear throughout.
+- **Fairness:** the NHANES analyses are survey-weighted and checked by race/ethnicity. Small cells are suppressed.
+- **Who we might miss:**
+  - People with irregular cycles, PCOS or hormonal contraception (calendar phases are estimates).
+  - Trans and nonbinary people who menstruate.
+  - Non-US populations.
+  - People with low literacy or no smartphone.
 
 ## How we built it
-- **App:** React 19, TypeScript, Vite, Tailwind, Recharts, framer-motion.
-- **On-device AI:** MediaPipe face and pose analysis plus Web Speech for voice.
+- **App:** React 19, TypeScript, Vite, Tailwind, framer-motion.
+- **On-device AI:** MediaPipe and Web Speech.
 - **LLM:** Groq, through a server-side proxy with failsafes.
-- **Analysis:** Python (numpy, pandas, scipy, scikit-learn, samplics for validation). Vitest covers 140+ tests.
+- **Analysis:** Python (numpy, pandas, scipy, scikit-learn, samplics).
+- **Tests:** 198 Vitest tests, including statistical calibration tests.
 
 ## Challenges
-- The Apple Women's Health Study data isn't public, so we switched to NHANES, which is public and nationally representative.
-- NHANES can't identify perimenopause and doesn't measure hot flashes, so we kept those claims scoped.
-- Getting the survey statistics right: domain estimation, design degrees of freedom, and validating the estimator.
-- Our own claim audit found 13 places where the app's wording went further than the evidence. We fixed them.
+- **No postpartum flag:** NHANES doesn't have one, so we used two proxies (breastfeeding, and birth in the past 12 months) and labelled them as proxies.
+- **Pregnancy and depression screening overlap:** PHQ-9 items like sleep, fatigue and appetite overlap with normal pregnancy, which we flag as a caveat.
+- **Mostly null results:** we had to say plainly when the data shows nothing, and build the product around that.
 
 ## What we learned
-Raw comparisons can mislead. Blood pressure "rises after menopause" in raw numbers, but not once you compare women of the same age.
-Honest uncertainty ("no clear link yet, you need about 80 days") is more useful to users than a confident guess.
+Averages hide individuals, and confident myths do harm. "Your logs show no clear dip, so train as planned" respects a woman more than a generic phase chart.
 
 ## What's next
-- Validate night-sweat detection against sternal skin-conductance studies.
-- Add SWAN public-use data (hot flashes, longitudinal) via ICPSR.
-- A local-only mode with an on-device LLM.
-- Clinician co-design.
+- Validate the n-of-1 phase test on real check-in data (mcPHASES on PhysioNet, credentialed access).
+- Detect phase from wearable temperature instead of the calendar.
+- Clinician and user co-design, including PMDD and perinatal mental-health experts.
 
 ## Built with
-react · typescript · python · numpy · pandas · scipy · scikit-learn · samplics · recharts · mediapipe · groq · vitest · nhanes · pubmed
+react · typescript · python · numpy · pandas · scipy · scikit-learn · samplics · framer-motion · mediapipe · groq · vitest · nhanes · pubmed

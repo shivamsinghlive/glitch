@@ -1,37 +1,46 @@
-# 4-minute pitch script
+# 3-minute pitch script
 
-Hard limit is 4:00. Aim for 3:40. One speaker drives the phone demo while another talks.
+Aim for 2:50. One person drives the demo; the others speak.
+**Setup before you start:** open http://localhost:3000/?reset → *Quick start for women* → name "Maya", age 27 →
+*I have periods* → Start → tap *Load 12 weeks of demo check-ins*. Stay on Home.
 
 **0:00–0:30 · Problem** (speaker 1)
-> "A billion women are in or past menopause. Hot flashes, broken sleep, low mood, bone loss. Most hear 'it's just age.'
-> Glitch turns what a woman feels into data she and her doctor can trust, and it's honest about what the data can't say."
+> "A small structure attached to the ovary, the rete ovarii, was dismissed as a leftover for about 150 years. New research in mice suggests it's active.
+> That's women's health in one sentence: under-studied. Women have adverse drug reactions nearly twice as often as men, and in 2013 the FDA had to halve the Ambien dose for women.
+> When I started lifting, nobody told me my body changes across the month. Some weeks I was strong. Before my period I felt low, couldn't lift as much, craved everything and quit, then felt like a failure.
+> So we built **Glitch**: it learns how *your* body works, at every life stage."
 
 **0:30–1:20 · Demo** (speaker 2 drives)
-1. Tap the mic and say *"I'm having a hot flash"*. It's logged by voice.
-2. Point at the rings and tiles: hot flashes, sleep, possible night sweats from skin temperature, BP.
-3. Open the triggers panel: *"After a warm night: 3× more flashes, 95% CI…"*. Then the line underneath: *"Tested, no clear link yet… needs ~80 days of logs."*
+1. Point at the phase ring: *"Maya is on day 21, her luteal phase."*
+2. Point at the welcome-back card: *"She missed a week. No guilt. Glitch links it to her phase and offers a 10-minute restart."*
+3. Scroll to **Today for you**: *"'Train, just lighter.' But that's from **her** logs, not a textbook."*
+4. Tap through the check-in: *"20 seconds a day: energy, mood, cravings, cramps, sleep, workout strength."*
+5. Scroll to **Your pattern by phase**: *"Each highlighted cell passed a statistical test. Her energy really is lower in her luteal phase. If it weren't, Glitch would say 'train as planned'."*
 
-**1:20–2:30 · Data science** (speaker 3)
-- *"Three levels of analysis."*
-- **Population:** scroll to *What 1,941 US women show*.
-  - *"NHANES, survey-weighted regression with design-based confidence intervals and FDR correction."*
-  - Tap **Raw**: *"Blood pressure looks 16 points higher after menopause."*
-  - Tap **Same age**, and the dot slides to zero: *"It's age, not menopause. What holds up is bone density, so Glitch puts strength training first."*
-- **Prediction:** *"Hot-flash model: AUC 0.75 with labs, calibrated, and we compared it against gradient boosting."*
-- **Personal:** *"Permutation test plus Benjamini–Hochberg. We simulated it: at most 9% of users ever see a false trigger."*
-- **Validation:** *"Our survey estimator matches the samplics library exactly, and a jackknife to within 0.3%."*
+**1:20–2:10 · Data science** (speaker 3)
+- *"Two levels: population and personal."*
+- **Population:** scroll to *What 4,163 US women show*.
+  > "This is CDC NHANES data on women aged 20 to 59. We used survey-weighted regression across life stages (cycling, pregnant, breastfeeding, post-menopause), adjusted for age and smoking, with false-discovery-rate correction.
+  > The result: after correction, **no stage clearly differs** on depression or sleep. The only hint is that breastfeeding mothers get less sleep (odds ratio 1.9).
+  > So averages barely tell life stages apart, let alone individual women. **That's why Glitch tests each woman's own data.**"
+- **Personal:**
+  > "Permutation tests with Benjamini–Hochberg correction on her own check-ins. We tested it: it finds a planted pattern and flags nothing when there's no pattern."
+- **Menopause** (one line):
+  > "For menopause, the same pipeline shows bone density really does drop, while blood pressure tracks age, not menopause."
 
-**2:30–3:20 · Ethics** (speaker 1)
-- *"Encrypted on the device. Camera and mic analysed locally. Ethnicity never leaves the phone."*
-- *"Fairness: we audited the model by race and education. It works similarly by race, but not reliably for women without high school, and our model card says so."*
-- *"We checked every health claim in our app against 44 PubMed papers and rewrote 13 that overstated the evidence."*
-- *"Who we might miss: surgical menopause, trans and nonbinary people, people without wearables."*
+**2:10–2:40 · Ethics & data literacy** (speaker 1)
+- *"With the BU librarians, we checked every health claim against **66 PubMed records** and rewrote 13 that overstated the evidence."*
+- *"We refuse to repeat myths. Research shows only small, inconsistent cycle effects on strength, so we never tell a woman she'll be weak. We test her data."*
+- *"We chose what not to use: Apple Women's Health Study data isn't public, and Mintel is licensed."*
+- *"Data stays encrypted on the device. In pregnancy and postpartum, persistent low mood links to the national maternal mental health hotline. No calorie deficits in pregnancy."*
 
-**3:20–3:40 · Close** (speaker 2)
-> Tap the 📄 icon to open the doctor summary. *"One page, statistically supported triggers, questions to ask. Glitch: find the bug, fix your health."*
+**2:40–3:00 · Close** (speaker 2)
+- Switch the profile to pregnant (or show a screenshot) to show Home adapts.
+> "Periods, pregnancy, postpartum, menopause: one app that learns **you**. Glitch: find the bug, fix your health."
 
 ## Likely judge questions
-- **"Is the demo data real?"** No. The wearable data is synthetic, generated with a fixed seed. The NHANES and TSHS analyses use real data. Trigger detection on the demo only shows the pipeline works; the simulations show its error rates.
-- **"Why logistic regression?"** It's interpretable, calibrated, and matches or beats gradient boosting on held-out data (better with labs).
-- **"Why survey weights?"** NHANES oversamples some groups. Without weights, results describe the sample, not US women.
-- **"Causal?"** No. It's cross-sectional, so these are associations, and we say so in the app.
+- **"Is the check-in data real?"** No. The demo check-ins are synthetic, generated with a fixed seed, and labelled "synthetic" in the app. NHANES and TSHS are real public data. The unit tests show the test finds real patterns and doesn't invent them.
+- **"Isn't 'breastfeeding' a weak postpartum proxy?"** Yes, and we say so. We added a second proxy (birth in the past 12 months), and short sleep holds there too (OR 2.0).
+- **"Why not just use the cycle-phase training advice everyone uses?"** Meta-analyses find only trivial, inconsistent average effects, and women vary. Generic phase advice can be wrong for a given woman.
+- **"Irregular cycles?"** Phases are calendar estimates and the app says so. Next step: phase from wearable temperature (ovulation detection is already built).
+- **"Causal?"** No. NHANES is cross-sectional and n-of-1 is observational. We say "association" everywhere.
