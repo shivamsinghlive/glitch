@@ -15,6 +15,7 @@ import { useMenopauseInsights } from "@/hooks/useMenopauseInsights";
 import { MRS_ITEMS, MRS_OPTIONS, scoreMrs, triggerEffect, daysNeeded, type MenoStage } from "@/lib/menopause";
 import HotflashRiskCard from "./HotflashRiskCard";
 import EvidenceSource from "./EvidenceSource";
+import ModelEvidenceCard from "./ModelEvidenceCard";
 
 const INK = "var(--ink)";
 const MUTED = "var(--txt-muted)";
@@ -121,10 +122,12 @@ export default function MenopausePanel() {
       </div>
 
       <HotflashRiskCard hasLoggedFlashes={m.flashes.length > 0 && !m.demoFlashes} />
+      <ModelEvidenceCard />
 
       {/* Warm nights */}
       <div style={card}>
         <p style={{ fontSize: 14, fontWeight: 700, color: INK, fontFamily: font }}>Possible night sweats from WHOOP</p>
+        <p style={{ fontSize: 11.5, color: MUTED, fontFamily: font, lineHeight: 1.45, marginTop: 3 }}>A guide, not a verdict. It catches under half of real night sweats, so no flag does not mean no sweat. Trust how you felt.</p>
         {!h.connected ? (
           <>
             <p style={{ fontSize: 12.5, color: MUTED, fontFamily: font, lineHeight: 1.5, margin: "6px 0 10px" }}>WHOOP measures your skin temperature and wake-ups every night. Glitch flags nights that run hot <i>and</i> broken as possible night sweats. It's an estimate, not a validated measurement. <EvidenceSource id="wearable-hot-flash-detection" /></p>

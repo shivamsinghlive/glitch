@@ -1,0 +1,117 @@
+{
+  "tshs": {
+    "n": 375,
+    "groups": [
+      {
+        "group": "African American",
+        "n": 182,
+        "prevalence": 0.385,
+        "ci": [
+          0.317,
+          0.457
+        ]
+      },
+      {
+        "group": "Not African American",
+        "n": 193,
+        "prevalence": 0.249,
+        "ci": [
+          0.193,
+          0.314
+        ]
+      }
+    ],
+    "oddsRatioAfricanAmerican": {
+      "crude": {
+        "or": 1.89,
+        "ci": [
+          1.21,
+          2.94
+        ]
+      },
+      "adjusted": {
+        "or": 1.13,
+        "ci": [
+          0.68,
+          1.88
+        ]
+      }
+    },
+    "adjustedFor": [
+      "smoking",
+      "BMI 30+",
+      "earlier menopausal symptoms",
+      "age group"
+    ]
+  },
+  "nhanes": {
+    "source": "NHANES 2017-18, women 35-79, survey-weighted, age-standardised",
+    "groups": [
+      {
+        "group": "Mexican American",
+        "n": 276,
+        "nBp": 254,
+        "highBp": 0.446,
+        "highBpCi": 0.066,
+        "shortSleep": 0.075,
+        "shortSleepCi": 0.035,
+        "smallSample": false
+      },
+      {
+        "group": "Other Hispanic",
+        "n": 214,
+        "nBp": 192,
+        "highBp": 0.448,
+        "highBpCi": 0.072,
+        "shortSleep": 0.099,
+        "shortSleepCi": 0.046,
+        "smallSample": false
+      },
+      {
+        "group": "White (non-Hispanic)",
+        "n": 616,
+        "nBp": 561,
+        "highBp": 0.38,
+        "highBpCi": 0.05,
+        "shortSleep": 0.071,
+        "shortSleepCi": 0.027,
+        "smallSample": false
+      },
+      {
+        "group": "Black (non-Hispanic)",
+        "n": 488,
+        "nBp": 447,
+        "highBp": 0.619,
+        "highBpCi": 0.048,
+        "shortSleep": 0.138,
+        "shortSleepCi": 0.035,
+        "smallSample": false
+      },
+      {
+        "group": "Asian (non-Hispanic)",
+        "n": 317,
+        "nBp": 281,
+        "highBp": 0.506,
+        "highBpCi": 0.058,
+        "shortSleep": 0.096,
+        "shortSleepCi": 0.035,
+        "smallSample": false
+      },
+      {
+        "group": "Other or multiracial",
+        "n": 82,
+        "nBp": 76,
+        "highBp": 0.383,
+        "highBpCi": 0.154,
+        "shortSleep": 0.056,
+        "shortSleepCi": 0.075,
+        "smallSample": true
+      }
+    ]
+  },
+  "caveats": [
+    "Groups stand in for income, access to care, stress and discrimination, not biology.",
+    "No region variable exists in these datasets.",
+    "Confidence intervals for NHANES are approximate (effective sample size), not full survey-design variance."
+  ]
+}

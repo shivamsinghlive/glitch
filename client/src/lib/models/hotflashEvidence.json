@@ -1,0 +1,268 @@
+{
+  "dataset": "TSHS Hot Flashes (n=375)",
+  "cvScheme": "5-fold stratified, repeated 20 times",
+  "auc": 0.727,
+  "aucBootstrap95": [
+    0.643,
+    0.757
+  ],
+  "baselineAuc": 0.5,
+  "brier": 0.182,
+  "brierBaseline": 0.216,
+  "calibration": [
+    {
+      "predicted": 0.121,
+      "observed": 0.16,
+      "n": 75
+    },
+    {
+      "predicted": 0.151,
+      "observed": 0.133,
+      "n": 75
+    },
+    {
+      "predicted": 0.228,
+      "observed": 0.253,
+      "n": 75
+    },
+    {
+      "predicted": 0.479,
+      "observed": 0.48,
+      "n": 75
+    },
+    {
+      "predicted": 0.596,
+      "observed": 0.547,
+      "n": 75
+    }
+  ],
+  "fairness": {
+    "protectedFeaturesUsed": false,
+    "decisionThreshold": 0.315,
+    "groups": [
+      {
+        "attribute": "race",
+        "group": "Not African American",
+        "n": 193,
+        "observedRate": 0.249,
+        "meanPredicted": 0.259,
+        "auc": 0.692,
+        "flagRate": 0.301,
+        "tpr": 0.583,
+        "fpr": 0.207
+      },
+      {
+        "attribute": "race",
+        "group": "African American",
+        "n": 182,
+        "observedRate": 0.385,
+        "meanPredicted": 0.374,
+        "auc": 0.719,
+        "flagRate": 0.544,
+        "tpr": 0.8,
+        "fpr": 0.384
+      },
+      {
+        "attribute": "education",
+        "group": "Lower education",
+        "n": 39,
+        "observedRate": 0.513,
+        "meanPredicted": 0.474,
+        "auc": 0.592,
+        "flagRate": 0.769,
+        "tpr": 0.9,
+        "fpr": 0.632
+      },
+      {
+        "attribute": "education",
+        "group": "Higher education",
+        "n": 336,
+        "observedRate": 0.292,
+        "meanPredicted": 0.297,
+        "auc": 0.722,
+        "flagRate": 0.378,
+        "tpr": 0.673,
+        "fpr": 0.256
+      }
+    ],
+    "aucGapMax": {
+      "race": 0.027,
+      "education": 0.13,
+      "raceTpr": 0.217,
+      "raceFpr": 0.177,
+      "educationTpr": 0.227,
+      "educationFpr": 0.376
+    },
+    "aucWithProtectedFeatures": 0.719,
+    "note": "Race and education are excluded from the model. Subgroup AUC and calibration are checked anyway. Subgroups are small, so differences are indicative, not conclusive."
+  },
+  "labsAuc": 0.748,
+  "classification": {
+    "threshold": 0.315,
+    "model": {
+      "tp": 84,
+      "fp": 73,
+      "fn": 34,
+      "tn": 184,
+      "accuracy": 0.715,
+      "precision": 0.535,
+      "recall": 0.712,
+      "specificity": 0.716,
+      "f1": 0.611,
+      "balancedAccuracy": 0.714,
+      "mcc": 0.403,
+      "auc": 0.727,
+      "prAuc": 0.469,
+      "logLoss": 0.544
+    },
+    "baselines": {
+      "alwaysNo": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 118,
+        "tn": 257,
+        "accuracy": 0.685,
+        "precision": 0.0,
+        "recall": 0.0,
+        "specificity": 1.0,
+        "f1": 0.0,
+        "balancedAccuracy": 0.5,
+        "mcc": 0.0
+      },
+      "alwaysYes": {
+        "tp": 118,
+        "fp": 257,
+        "fn": 0,
+        "tn": 0,
+        "accuracy": 0.315,
+        "precision": 0.315,
+        "recall": 1.0,
+        "specificity": 0.0,
+        "f1": 0.479,
+        "balancedAccuracy": 0.5,
+        "mcc": 0.0
+      },
+      "priorSymptomsOnly": {
+        "tp": 84,
+        "fp": 73,
+        "fn": 34,
+        "tn": 184,
+        "accuracy": 0.715,
+        "precision": 0.535,
+        "recall": 0.712,
+        "specificity": 0.716,
+        "f1": 0.611,
+        "balancedAccuracy": 0.714,
+        "mcc": 0.403,
+        "auc": 0.714
+      }
+    },
+    "sweep": [
+      {
+        "threshold": 0.2,
+        "precision": 0.495,
+        "recall": 0.763,
+        "f1": 0.6,
+        "accuracy": 0.68,
+        "specificity": 0.642,
+        "flagRate": 0.485
+      },
+      {
+        "threshold": 0.25,
+        "precision": 0.494,
+        "recall": 0.712,
+        "f1": 0.583,
+        "accuracy": 0.68,
+        "specificity": 0.665,
+        "flagRate": 0.453
+      },
+      {
+        "threshold": 0.3,
+        "precision": 0.535,
+        "recall": 0.712,
+        "f1": 0.611,
+        "accuracy": 0.715,
+        "specificity": 0.716,
+        "flagRate": 0.419
+      },
+      {
+        "threshold": 0.35,
+        "precision": 0.535,
+        "recall": 0.712,
+        "f1": 0.611,
+        "accuracy": 0.715,
+        "specificity": 0.716,
+        "flagRate": 0.419
+      },
+      {
+        "threshold": 0.4,
+        "precision": 0.535,
+        "recall": 0.712,
+        "f1": 0.611,
+        "accuracy": 0.715,
+        "specificity": 0.716,
+        "flagRate": 0.419
+      },
+      {
+        "threshold": 0.45,
+        "precision": 0.538,
+        "recall": 0.534,
+        "f1": 0.536,
+        "accuracy": 0.709,
+        "specificity": 0.79,
+        "flagRate": 0.312
+      },
+      {
+        "threshold": 0.5,
+        "precision": 0.589,
+        "recall": 0.534,
+        "f1": 0.56,
+        "accuracy": 0.736,
+        "specificity": 0.829,
+        "flagRate": 0.285
+      },
+      {
+        "threshold": 0.6,
+        "precision": 0.594,
+        "recall": 0.161,
+        "f1": 0.253,
+        "accuracy": 0.701,
+        "specificity": 0.949,
+        "flagRate": 0.085
+      }
+    ]
+  },
+  "errorAnalysis": {
+    "caught": {
+      "n": 84,
+      "priorSymptoms": 1.0,
+      "bmi30": 0.51,
+      "smoker": 0.46,
+      "ageGroup3": 0.19
+    },
+    "missed": {
+      "n": 34,
+      "priorSymptoms": 0.0,
+      "bmi30": 0.41,
+      "smoker": 0.41,
+      "ageGroup3": 0.18
+    },
+    "falseAlarms": {
+      "n": 73,
+      "priorSymptoms": 1.0,
+      "bmi30": 0.4,
+      "smoker": 0.38,
+      "ageGroup3": 0.23
+    },
+    "correctNegatives": {
+      "n": 184,
+      "priorSymptoms": 0.0,
+      "bmi30": 0.29,
+      "smoker": 0.31,
+      "ageGroup3": 0.21
+    },
+    "missedWithoutPriorSymptoms": {
+      "share": 1.0
+    }
+  }
+}

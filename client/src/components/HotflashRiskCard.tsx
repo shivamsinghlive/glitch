@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
-import { hotflashRisk, MODEL_CARD } from "@/lib/hotflashRisk";
+import { hotflashRisk, whatIfChanges, MODEL_CARD } from "@/lib/hotflashRisk";
 
 const INK = "var(--ink)";
 const MUTED = "var(--txt-muted)";
@@ -24,6 +24,7 @@ export default function HotflashRiskCard({ hasLoggedFlashes }: { hasLoggedFlashe
   const lastMrs = mrsLog[mrsLog.length - 1];
   const priorSymptoms = wh.priorMenoSymptoms ?? (hasLoggedFlashes || (lastMrs ? lastMrs.somatic > 0 : false));
   const r = hotflashRisk({ age: profile.age, smoker: !!wh.smoker, bmi, priorSymptoms, fsh: wh.labs?.fsh, estradiol: wh.labs?.estradiol });
+  const whatIf = whatIfChanges({ age: profile.age, smoker: !!wh.smoker, bmi, priorSymptoms, fsh: wh.labs?.fsh, estradiol: wh.labs?.estradiol });
   const pct = Math.round(r.probability * 100);
   const base = Math.round(r.prevalence * 100);
   const ev = r.usedLabs ? MODEL_CARD.evaluation.withLabs : MODEL_CARD.evaluation.base;
@@ -86,6 +87,14 @@ export default function HotflashRiskCard({ hasLoggedFlashes }: { hasLoggedFlashe
         </p>
       )}
 
+      {whatIf.length > 0 && (
+        <div style={{ marginTop: 8, fontSize: 12, color: INK, fontFamily: font, lineHeight: 1.5 }}>
+          {whatIf.map((w) => (
+            <p key={w.label}>🔮 <b>What if</b> you {w.label}? The model's estimate moves from <b>{Math.round(w.from * 100)}%</b> to <b>{Math.round(w.to * 100)}%</b>. <span style={{ color: MUTED }}>(Association in a 2001 cohort, not a promise.)</span></p>
+          ))}
+        </div>
+      )}
+
       <button onClick={() => setShowCard((v) => !v)} style={{ marginTop: 10, border: "none", background: "transparent", color: MUTED, fontWeight: 600, fontSize: 11.5, fontFamily: font, padding: 0 }}>
         {showCard ? "Hide" : "How this model works"} ▾
       </button>
@@ -96,7 +105,8 @@ export default function HotflashRiskCard({ hasLoggedFlashes }: { hasLoggedFlashe
               <p><b>Model:</b> logistic regression trained on {MODEL_CARD.trainedOn}.</p>
               <p><b>Accuracy:</b> cross-validated AUC {MODEL_CARD.aucBase} (profile) / {MODEL_CARD.aucLabs} (with labs).</p>
               <p><b>Held-out check ({r.usedLabs ? "with labs" : "profile"}):</b> AUC {lr.oofAuc.toFixed(2)} (95% CI {lr.oofAucCi95[0].toFixed(2)}–{lr.oofAucCi95[1].toFixed(2)}) vs {gbm.oofAuc.toFixed(2)} for gradient boosting and {ev.comparison.interceptOnly.cvAucMean.toFixed(2)} for guessing the average · Brier {ev.calibration.brier.toFixed(3)} (baseline {ev.calibration.brierBaseline.toFixed(3)}) · calibration slope {ev.calibration.slope.toFixed(2)}.</p>
-              <p><b>Fairness:</b> {MODEL_CARD.excluded.join(" and ")} are in the dataset but deliberately not used. Held-out audit by race: {ev.fairness.race.summary}</p>
+              <p><b>Honest read:</b> most of the signal is one question, earlier symptoms. Its yes/no calls match that single question exactly (F1 0.61).</p>
+              <p><b>Fairness:</b> {MODEL_CARD.excluded.join(" and ")} are in the dataset but deliberately not used. Held-out audit by race: {ev.fairness.race.summary} Full group breakdown in Model evidence.</p>
               <p><b>Limits:</b> {MODEL_CARD.caveat}</p>
               <p style={{ color: MUTED, marginTop: 4 }}>{MODEL_CARD.citation} · {MODEL_CARD.license}</p>
             </div>

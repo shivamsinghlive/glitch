@@ -339,7 +339,7 @@ export default function Progress() {
                   padding: "5px 12px",
                   borderRadius: 10,
                   background: "var(--accent)",
-                  color: "white",
+                  color: "var(--on-accent)",
                   fontSize: 12,
                   fontWeight: 600,
                   fontFamily: "'DM Sans', sans-serif",

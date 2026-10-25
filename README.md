@@ -76,7 +76,8 @@ Open **http://localhost:3000** in Chrome.
 | `pnpm start` | Serve the production build |
 | `pnpm format` | Format code with Prettier |
 | `pnpm train:hotflash` | Retrain the hot-flash model (see below) |
-| `pnpm validate:ovulation` | Validate ovulation detection on mcPHASES (see below) |
+| `pnpm evidence` | Regenerate fairness audit, NHANES reference and detector evaluation |
+| `pnpm validate:ovulation` | Optional: validate ovulation on mcPHASES (needs restricted data) |
 
 ---
 
@@ -87,11 +88,14 @@ Open **http://localhost:3000** in Chrome.
 - **Night-sweat detection**: nights with warm skin temperature *and* broken sleep, from WHOOP.
 - **Perimenopause staging and alerts**: STRAW+10 stages, early (<45) and premature (<40) menopause flags, high-BP (ACC/AHA), sleep, hot-flash and mental-health alerts, optional notifications.
 - **Doctor summary**: one-page weekly table to print or save as PDF.
+- **Plans built from your choices, grounded in evidence (RAG)**: pick your goal, equipment, favourite training styles and days per week, and the weekly plan and food targets rebuild instantly. Every exercise says why it's there, and the plan lists the cited passages it was retrieved from (BM25 retrieval over a small cited library, on-device). The coach is grounded the same way.
+- **Food that updates correctly**: calorie and protein targets are computed from your age, weight, height, goal and training days (Mifflin-St Jeor, menopause protein guidance). Log by voice, photo or by typing it in; a failed photo analysis never invents numbers.
 - **Also included**: cycle-adjusted recovery, ovulation confirmation, a camera Form Coach (MediaPipe), food-photo logging, supplement timing rules, an appraisal-based check-in, PHQ-2/GAD-2 screening.
 
 ### Privacy
 - All personal data is **encrypted on the device** (AES-GCM, non-extractable key). There's no backend database yet.
-- Camera and microphone are analysed **in the browser**; only text and a mood label are sent to the AI.
+- Camera and microphone are analysed **in the browser**. The AI coach only receives text, and **you choose how much**: *AI off*, *Chat only* (default: just the messages you say or type) or *Chat + health summary* (also name, conditions, meals, WHOOP scores, menopause stage, consented hormone details). Open **Progress → Your data & privacy** to switch, and to see exactly what was sent this session.
+- Full write-up of bias, harms and mitigations: [ETHICS.md](ETHICS.md).
 - Ethnicity and hormone details are **optional and consented**, and used only for context, never for scoring.
 
 ---
@@ -150,16 +154,23 @@ python3 -m venv .venv
 .venv/bin/python scripts/train_hotflash_model.py   # downloads the data, writes models/hotflashRisk.json
 ```
 
-### Ovulation validation (mcPHASES, PhysioNet: restricted)
-- Requires a PhysioNet account and signing the data use agreement: https://physionet.org/content/mcphases/1.0.0/
-- Put the CSVs in `scripts/data/mcphases/` (git-ignored), then:
+### Fairness audit and calibration (TSHS)
+`pnpm evidence` runs `scripts/evidence_hotflash.py`: out-of-fold AUC with a bootstrap interval, calibration by risk
+quintile, and AUC by race and education (neither is a model feature). Writes `models/hotflashEvidence.json`.
 
-```bash
-pnpm validate:ovulation -- --inspect    # list files and columns
-pnpm validate:ovulation                 # evaluate + tune, writes models/ovulationParams.json
-```
+### US population reference (NHANES 2017-2018, public)
+`scripts/nhanes_reference.py` downloads the CDC DEMO, BPX and SLQ files and writes survey-weighted blood-pressure and
+sleep percentiles for women 35-79 by age band (`models/nhanesReference.json`). The app uses it for "you vs US women your age".
 
-Only aggregate thresholds are written. Never commit mcPHASES files.
+### Detector evaluation (simulated ground truth)
+No public dataset pairs wearable nights with confirmed night sweats, so `scripts/evaluate_detectors.ts` simulates nights
+and cycles with known answers (plus confounders and anovulatory cycles) and reports precision, recall, false-alarm rate,
+a threshold sweep and ovulation timing error (`models/detectorEvaluation.json`). This is a stress test, not clinical validation.
+
+### Ovulation on real data (optional, mcPHASES: restricted)
+Needs a PhysioNet account and a signed data use agreement: https://physionet.org/content/mcphases/1.0.0/
+Put the CSVs in `scripts/data/mcphases/` (git-ignored), then `pnpm validate:ovulation -- --inspect` and `pnpm validate:ovulation`.
+Not run for this submission; the thresholds are the standard "3 over 6" rule. Never commit mcPHASES files.
 
 ---
 

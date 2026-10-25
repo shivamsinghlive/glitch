@@ -4,7 +4,7 @@
  * Other users:  Home | Log Food | Fitness | Form Coach | Progress
  */
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -145,6 +145,7 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark" switchable>
+        <MotionConfig reducedMotion="user">
         <TooltipProvider>
           <AppProvider>
             <Toaster position="top-center" richColors theme="dark" />
@@ -153,6 +154,7 @@ function App() {
             </div>
           </AppProvider>
         </TooltipProvider>
+        </MotionConfig>
       </ThemeProvider>
     </ErrorBoundary>
   );

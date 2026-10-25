@@ -138,7 +138,8 @@ export interface WarmNight {
 }
 
 /** Each night's skin-temp delta vs the previous 14-night median; "likely" when ≥ +0.35 °C with disruption. */
-export function warmNights(days: DailyPhysiology[]): WarmNight[] {
+export function warmNights(days: DailyPhysiology[], opts: { tempThreshold?: number } = {}): WarmNight[] {
+  const tempThreshold = opts.tempThreshold ?? 0.35;
   const out: WarmNight[] = [];
   days.forEach((d, i) => {
     if (d.skinTemp == null || i < 7) return;
@@ -150,7 +151,7 @@ export function warmNights(days: DailyPhysiology[]): WarmNight[] {
     const disrupted = (d.disturbances != null && priorDist.length >= 5 && d.disturbances >= mean(priorDist) + 3)
       || (d.sleepEfficiency != null && d.sleepEfficiency < 82)
       || (d.sleepPerformance != null && d.sleepPerformance < 68);
-    out.push({ date: d.date, tempDelta: delta, likely: delta >= 0.35 && disrupted });
+    out.push({ date: d.date, tempDelta: delta, likely: delta >= tempThreshold && disrupted });
   });
   return out;
 }
@@ -229,6 +230,11 @@ export function permutationPValue(counts: number[], isTrigger: boolean[], seed: 
     if (s >= obs - 1e-9) hits++;
   }
   return (1 + hits) / (1 + b);
+}
+
+/** Two-sample form of permutationPValue: one-sided p for "withVals has the higher mean". */
+export function permutationP(withVals: number[], withoutVals: number[], perms = PERMUTATIONS, seed = 17): number {
+  return permutationPValue([...withVals, ...withoutVals], [...withVals.map(() => true), ...withoutVals.map(() => false)], seed, perms);
 }
 
 /** Benjamini–Hochberg step-up q-values, returned in input order. */
