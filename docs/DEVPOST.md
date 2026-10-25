@@ -37,6 +37,12 @@ Four analyses, each feeding a feature.
 - **Method:** for every metric × phase, compare days in that phase with all other days using a two-sided permutation test, with BH-FDR across all comparisons. A pattern is shown only if q < 0.10 and the difference is at least 0.5 points.
 - **Safeguards:** at least 4 logged days per side, seeded tests (results are reproducible), and the advice text depends only on significant findings.
 - **Tests:** unit tests check that a planted pattern is found and that a flat log produces no false findings.
+- **Second check, Bayesian personal estimate (combining population and personal data):** each metric × phase effect gets a normal–normal model.
+  - Prior θ ~ N(μ₀, τ²), with μ₀ = 0 from the McNulty 2020 meta-analysis (78 studies: trivial average effect, ES −0.06), except +0.3 for luteal cravings (energy-intake meta-analysis, +168 kcal/day). τ = 0.5 is an assumption, with sensitivity checks at 0.3 and 1.0.
+  - Her data enters as d̂ ~ N(θ, σ²(1/n_in + 1/n_out)). The closed-form posterior is mean = w·d̂ + (1−w)·μ₀, where w is the share of the estimate from her data. With a week of data it leans on the research; with months it's hers.
+  - A pattern is shown only when the permutation test **and** the 95% credible interval agree.
+- **Sleep, Beta–Binomial:** the prior is the NHANES short-sleep rate for her life stage (24% cycling, 13% pregnant, 34% breastfeeding), worth 10 nights. Her logged nights under 7 hours update it to "30% of your nights (95% CrI 21–39%), about the same as women like you".
+- **UI:** each card shows one line, and a **?** opens the numbers, model and caveats.
 - The same approach powers the menopause trigger analysis: a Poisson rate ratio with 95% CI, a permutation test and BH correction. Simulations cap the false-trigger rate at 9% and estimate the days needed to detect a trigger.
 
 **3. Menopause population: NHANES, 1,941 women aged 40–59**

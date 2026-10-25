@@ -24,7 +24,8 @@ Aim for 2:50. One person drives the demo; the others speak.
   > The result: after correction, **no stage clearly differs** on depression or sleep. The only hint is that breastfeeding mothers get less sleep (odds ratio 1.9).
   > So averages barely tell life stages apart, let alone individual women. **That's why Glitch tests each woman's own data.**"
 - **Personal:**
-  > "Permutation tests with Benjamini–Hochberg correction on her own check-ins. We tested it: it finds a planted pattern and flags nothing when there's no pattern."
+  > "Two checks on her own check-ins. First, a permutation test with false-discovery control. Second, a Bayesian model that starts from the research (meta-analyses say the average phase effect is near zero) and lets her data take over as she logs. A pattern shows up only when both agree. Tap the question mark and you see the estimate, the confidence interval, and how much of it is her own data."
+  > "For sleep, NHANES gives the starting point for her life stage, and her nights update it."
 - **Menopause** (one line):
   > "For menopause, the same pipeline shows bone density really does drop, while blood pressure tracks age, not menopause."
 
