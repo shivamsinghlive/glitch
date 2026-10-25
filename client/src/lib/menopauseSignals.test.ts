@@ -17,7 +17,7 @@ describe("sleep fragmentation", () => {
   });
 });
 
-describe("blood pressure (ACC/AHA 2017)", () => {
+describe("blood pressure (AHA/ACC 2025 categories)", () => {
   it("categorises readings", () => {
     expect(bpCategory(115, 75)).toBe("normal");
     expect(bpCategory(125, 78)).toBe("elevated");

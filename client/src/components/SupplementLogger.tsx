@@ -97,7 +97,7 @@ export default function SupplementLogger() {
       {boneSuggestions.length > 0 && (
         <div style={{ marginBottom: 12, padding: "11px 12px", borderRadius: 14, background: "color-mix(in oklch, var(--accent) 7%, var(--card-bg))", border: "1px solid color-mix(in oklch, var(--accent) 22%, transparent)" }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.4, color: "var(--accent)", fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase", marginBottom: 8 }}>
-            Suggested for bone & muscle
+            Bone & muscle: food first
           </p>
           <div className="flex flex-col gap-2">
             {boneSuggestions.map((s) => {
@@ -120,7 +120,7 @@ export default function SupplementLogger() {
             })}
           </div>
           <p style={{ fontSize: 10, color: "var(--txt-muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 8, lineHeight: 1.4 }}>
-            General guidance for women over 50 — confirm doses with your clinician or pharmacist.
+            General guidance for women over 50, not a prescription. Ask your clinician whether you need a supplement or a vitamin D level check.
           </p>
         </div>
       )}

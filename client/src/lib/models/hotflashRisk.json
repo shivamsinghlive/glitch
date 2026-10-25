@@ -89,5 +89,340 @@
     },
     "cvAuc": 0.753,
     "cvAucSd": 0.054
+  },
+  "evaluation": {
+    "method": "Repeated stratified 5-fold CV (20 repeats, seed 7); all models share the same folds. cvAucMean/Sd summarise the 100 per-fold AUCs. Out-of-fold (OOF) probabilities are averaged over the 20 repeats to give one held-out prediction per woman; oofAuc, calibration and fairness use these, with 95% CIs from 2000 bootstrap resamples of women (percentile method). Calibration slope/recalibration intercept come from regressing the outcome on logit(OOF probability); 'intercept' fixes the slope at 1 (calibration-in-the-large). Reliability table uses 5 equal-count bins.",
+    "comparison": {
+      "base": {
+        "logisticRegression": {
+          "cvAucMean": 0.735,
+          "cvAucSd": 0.051,
+          "oofAuc": 0.702,
+          "oofAucCi95": [
+            0.643,
+            0.757
+          ]
+        },
+        "gradientBoosting": {
+          "cvAucMean": 0.725,
+          "cvAucSd": 0.052,
+          "oofAuc": 0.706,
+          "oofAucCi95": [
+            0.65,
+            0.761
+          ]
+        },
+        "interceptOnly": {
+          "cvAucMean": 0.5,
+          "cvAucSd": 0.0,
+          "oofAuc": 0.479,
+          "oofAucCi95": [
+            0.419,
+            0.544
+          ]
+        },
+        "lrMinusGbAuc": {
+          "estimate": -0.004,
+          "ci95": [
+            -0.021,
+            0.012
+          ]
+        },
+        "rationale": "Logistic regression out-of-fold AUC 0.702 (95% CI 0.643-0.757) vs gradient boosting 0.706 (0.650-0.761); paired difference -0.004 (95% CI -0.021 to +0.012). The interval includes zero, so the two are comparable and boosting gives no reliable gain. Logistic regression is kept because each factor maps to a readable odds ratio shown to the user, it runs as a few coefficients on-device, and it is less prone to overfitting 375 rows. Both beat the intercept-only baseline (per-fold AUC 0.50; its pooled OOF AUC sits slightly below 0.5 because each held-out fold's prevalence is anti-correlated with the training-fold prevalence it is given)."
+      },
+      "withLabs": {
+        "logisticRegression": {
+          "cvAucMean": 0.753,
+          "cvAucSd": 0.054,
+          "oofAuc": 0.749,
+          "oofAucCi95": [
+            0.695,
+            0.798
+          ]
+        },
+        "gradientBoosting": {
+          "cvAucMean": 0.711,
+          "cvAucSd": 0.054,
+          "oofAuc": 0.714,
+          "oofAucCi95": [
+            0.653,
+            0.77
+          ]
+        },
+        "interceptOnly": {
+          "cvAucMean": 0.5,
+          "cvAucSd": 0.0,
+          "oofAuc": 0.479,
+          "oofAucCi95": [
+            0.419,
+            0.544
+          ]
+        },
+        "lrMinusGbAuc": {
+          "estimate": 0.035,
+          "ci95": [
+            0.012,
+            0.057
+          ]
+        },
+        "rationale": "Logistic regression out-of-fold AUC 0.749 (95% CI 0.695-0.798) vs gradient boosting 0.714 (0.653-0.770); paired difference +0.035 (95% CI +0.012 to +0.057). Logistic regression is reliably better here; boosting appears to overfit the small sample. Logistic regression is kept because each factor maps to a readable odds ratio shown to the user, it runs as a few coefficients on-device, and it is less prone to overfitting 375 rows. Both beat the intercept-only baseline (per-fold AUC 0.50; its pooled OOF AUC sits slightly below 0.5 because each held-out fold's prevalence is anti-correlated with the training-fold prevalence it is given)."
+      }
+    },
+    "calibration": {
+      "base": {
+        "brier": 0.1821,
+        "brierBaseline": 0.2157,
+        "slope": 0.939,
+        "intercept": -0.002,
+        "recalibrationIntercept": -0.041,
+        "reliability": [
+          {
+            "bin": 1,
+            "n": 75,
+            "meanPredicted": 0.121,
+            "observed": 0.16
+          },
+          {
+            "bin": 2,
+            "n": 75,
+            "meanPredicted": 0.151,
+            "observed": 0.133
+          },
+          {
+            "bin": 3,
+            "n": 75,
+            "meanPredicted": 0.228,
+            "observed": 0.253
+          },
+          {
+            "bin": 4,
+            "n": 75,
+            "meanPredicted": 0.479,
+            "observed": 0.48
+          },
+          {
+            "bin": 5,
+            "n": 75,
+            "meanPredicted": 0.596,
+            "observed": 0.547
+          }
+        ]
+      },
+      "withLabs": {
+        "brier": 0.1792,
+        "brierBaseline": 0.2157,
+        "slope": 0.92,
+        "intercept": -0.001,
+        "recalibrationIntercept": -0.051,
+        "reliability": [
+          {
+            "bin": 1,
+            "n": 75,
+            "meanPredicted": 0.094,
+            "observed": 0.107
+          },
+          {
+            "bin": 2,
+            "n": 75,
+            "meanPredicted": 0.145,
+            "observed": 0.173
+          },
+          {
+            "bin": 3,
+            "n": 75,
+            "meanPredicted": 0.245,
+            "observed": 0.2
+          },
+          {
+            "bin": 4,
+            "n": 75,
+            "meanPredicted": 0.455,
+            "observed": 0.493
+          },
+          {
+            "bin": 5,
+            "n": 75,
+            "meanPredicted": 0.634,
+            "observed": 0.6
+          }
+        ]
+      }
+    },
+    "fairness": {
+      "base": {
+        "note": "Race and education are not model inputs; they are used only to audit out-of-fold logistic-regression predictions. Metrics are suppressed (null) when a group has n<30 or fewer than 10 events/non-events.",
+        "race": {
+          "groups": {
+            "African American": {
+              "n": 182,
+              "positives": 70,
+              "prevalence": 0.385,
+              "auc": 0.693,
+              "aucCi95": [
+                0.615,
+                0.77
+              ],
+              "meanPredicted": 0.374,
+              "observed": 0.385,
+              "observedMinusPredicted": 0.01,
+              "gapCi95": [
+                -0.056,
+                0.073
+              ],
+              "suppressed": false
+            },
+            "Caucasian": {
+              "n": 193,
+              "positives": 48,
+              "prevalence": 0.249,
+              "auc": 0.654,
+              "aucCi95": [
+                0.545,
+                0.754
+              ],
+              "meanPredicted": 0.259,
+              "observed": 0.249,
+              "observedMinusPredicted": -0.01,
+              "gapCi95": [
+                -0.068,
+                0.049
+              ],
+              "suppressed": false
+            }
+          },
+          "finding": "By race, out-of-fold AUC was African American 0.69 (95% CI 0.61-0.77, n=182); Caucasian 0.65 (95% CI 0.55-0.75, n=193). The intervals overlap, so this sample cannot show a reliable difference in ranking performance (it also cannot rule one out). Observed hot-flash prevalence ranged from 25% (Caucasian) to 38% (African American). Average predicted and observed rates agree within sampling error for every reported group.",
+          "summary": "AUC 0.69 (African American) vs 0.65 (Caucasian); intervals overlap, no reliable gap detected at this sample size; predicted rates match observed rates in each group."
+        },
+        "education": {
+          "groups": {
+            "High school or more": {
+              "n": 336,
+              "positives": 98,
+              "prevalence": 0.292,
+              "auc": 0.694,
+              "aucCi95": [
+                0.628,
+                0.762
+              ],
+              "meanPredicted": 0.297,
+              "observed": 0.292,
+              "observedMinusPredicted": -0.005,
+              "gapCi95": [
+                -0.048,
+                0.039
+              ],
+              "suppressed": false
+            },
+            "Less than high school": {
+              "n": 39,
+              "positives": 20,
+              "prevalence": 0.513,
+              "auc": 0.568,
+              "aucCi95": [
+                0.382,
+                0.753
+              ],
+              "meanPredicted": 0.474,
+              "observed": 0.513,
+              "observedMinusPredicted": 0.038,
+              "gapCi95": [
+                -0.116,
+                0.188
+              ],
+              "suppressed": false
+            }
+          },
+          "finding": "By education, out-of-fold AUC was High school or more 0.69 (95% CI 0.63-0.76, n=336); Less than high school 0.57 (95% CI 0.38-0.75, n=39). The intervals overlap, so this sample cannot show a reliable difference in ranking performance (it also cannot rule one out). Observed hot-flash prevalence ranged from 29% (High school or more) to 51% (Less than high school). For Less than high school the AUC interval includes 0.5, so better-than-chance ranking is not established for that group. Average predicted and observed rates agree within sampling error for every reported group.",
+          "summary": "AUC 0.69 (High school or more) vs 0.57 (Less than high school); intervals overlap, no reliable gap detected at this sample size; predicted rates match observed rates in each group."
+        }
+      },
+      "withLabs": {
+        "note": "Race and education are not model inputs; they are used only to audit out-of-fold logistic-regression predictions. Metrics are suppressed (null) when a group has n<30 or fewer than 10 events/non-events.",
+        "race": {
+          "groups": {
+            "African American": {
+              "n": 182,
+              "positives": 70,
+              "prevalence": 0.385,
+              "auc": 0.738,
+              "aucCi95": [
+                0.663,
+                0.81
+              ],
+              "meanPredicted": 0.379,
+              "observed": 0.385,
+              "observedMinusPredicted": 0.006,
+              "gapCi95": [
+                -0.061,
+                0.069
+              ],
+              "suppressed": false
+            },
+            "Caucasian": {
+              "n": 193,
+              "positives": 48,
+              "prevalence": 0.249,
+              "auc": 0.732,
+              "aucCi95": [
+                0.644,
+                0.813
+              ],
+              "meanPredicted": 0.255,
+              "observed": 0.249,
+              "observedMinusPredicted": -0.006,
+              "gapCi95": [
+                -0.064,
+                0.05
+              ],
+              "suppressed": false
+            }
+          },
+          "finding": "By race, out-of-fold AUC was African American 0.74 (95% CI 0.66-0.81, n=182); Caucasian 0.73 (95% CI 0.64-0.81, n=193). The intervals overlap, so this sample cannot show a reliable difference in ranking performance (it also cannot rule one out). Observed hot-flash prevalence ranged from 25% (Caucasian) to 38% (African American). Average predicted and observed rates agree within sampling error for every reported group.",
+          "summary": "AUC 0.74 (African American) vs 0.73 (Caucasian); intervals overlap, no reliable gap detected at this sample size; predicted rates match observed rates in each group."
+        },
+        "education": {
+          "groups": {
+            "High school or more": {
+              "n": 336,
+              "positives": 98,
+              "prevalence": 0.292,
+              "auc": 0.748,
+              "aucCi95": [
+                0.69,
+                0.807
+              ],
+              "meanPredicted": 0.294,
+              "observed": 0.292,
+              "observedMinusPredicted": -0.003,
+              "gapCi95": [
+                -0.046,
+                0.041
+              ],
+              "suppressed": false
+            },
+            "Less than high school": {
+              "n": 39,
+              "positives": 20,
+              "prevalence": 0.513,
+              "auc": 0.55,
+              "aucCi95": [
+                0.356,
+                0.733
+              ],
+              "meanPredicted": 0.492,
+              "observed": 0.513,
+              "observedMinusPredicted": 0.021,
+              "gapCi95": [
+                -0.139,
+                0.17
+              ],
+              "suppressed": false
+            }
+          },
+          "finding": "By education, out-of-fold AUC was High school or more 0.75 (95% CI 0.69-0.81, n=336); Less than high school 0.55 (95% CI 0.36-0.73, n=39). The intervals overlap, so this sample cannot show a reliable difference in ranking performance (it also cannot rule one out). Observed hot-flash prevalence ranged from 29% (High school or more) to 51% (Less than high school). For Less than high school the AUC interval includes 0.5, so better-than-chance ranking is not established for that group. Average predicted and observed rates agree within sampling error for every reported group.",
+          "summary": "AUC 0.75 (High school or more) vs 0.55 (Less than high school); intervals overlap, no reliable gap detected at this sample size; predicted rates match observed rates in each group."
+        }
+      }
+    }
   }
 }

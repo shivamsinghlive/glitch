@@ -3,7 +3,7 @@
  * Stage on the STRAW+10 timeline, one-tap hot-flash logging, WHOOP night-sweat nights, personal
  * triggers, recovery-adjusted strength/bone training, the Menopause Rating Scale and clinician points.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { nanoid } from "nanoid";
 import { toast } from "sonner";
@@ -12,8 +12,9 @@ import { Flame, Stethoscope } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { useHealthInsights } from "@/hooks/useHealthInsights";
 import { useMenopauseInsights } from "@/hooks/useMenopauseInsights";
-import { MRS_ITEMS, MRS_OPTIONS, scoreMrs, type MenoStage } from "@/lib/menopause";
+import { MRS_ITEMS, MRS_OPTIONS, scoreMrs, triggerEffect, daysNeeded, type MenoStage } from "@/lib/menopause";
 import HotflashRiskCard from "./HotflashRiskCard";
+import EvidenceSource from "./EvidenceSource";
 
 const INK = "var(--ink)";
 const MUTED = "var(--txt-muted)";
@@ -40,6 +41,11 @@ export default function MenopausePanel() {
   const [mrsOpen, setMrsOpen] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [editingDate, setEditingDate] = useState(false);
+  // Power analysis: days of logs a 1.5× trigger (on ~30% of days) needs for 80% detection at this user's rate.
+  // Rate rounded to 0.5/day so the memoized simulation is reused; only recomputes when the bucket changes.
+  const baseBucket = m ? Math.max(0.5, Math.round(m.flashesPerDay14 * 2) / 2) : 0;
+  const hasFlashes = !!m && m.flashesPerDay14 > 0;
+  const needDays = useMemo(() => (hasFlashes ? daysNeeded({ baseRate: baseBucket, rateRatio: 1.5, triggerShare: 0.3 }) : undefined), [baseBucket, hasFlashes]);
   if (!m || !profile) return null;
 
   const idx = TIMELINE.findIndex((t) => t.id === m.stage.stage);
@@ -76,7 +82,7 @@ export default function MenopausePanel() {
             ))}
           </div>
         )}
-        <p style={{ fontSize: 12.5, color: INK, fontFamily: font, lineHeight: 1.5, marginTop: 10 }}>{m.stage.explanation}</p>
+        <p style={{ fontSize: 12.5, color: INK, fontFamily: font, lineHeight: 1.5, marginTop: 10 }}>{m.stage.explanation} <EvidenceSource id="straw10-staging" label="STRAW+10" /></p>
         {editingDate ? (
           <input type="date" autoFocus defaultValue={profile.womensHealth?.lastPeriodDate} max={new Date().toISOString().slice(0, 10)}
             onBlur={(e) => { if (e.target.value) updateWomensHealth({ lastPeriodDate: e.target.value }); setEditingDate(false); }}
@@ -97,7 +103,7 @@ export default function MenopausePanel() {
         <div className="flex gap-3 mb-3">
           <Stat value={`${m.flashesToday}`} label="today" />
           <Stat value={`${m.flashesPerDay14}`} label="per day (14d)" />
-          <Stat value={`${m.likelyWarm14}`} label="night-sweat nights (14d)" />
+          <Stat value={`${m.likelyWarm14}`} label="possible night-sweat nights (14d)" />
         </div>
         <div className="flex gap-1.5 mb-2">
           {([1, 2, 3] as const).map((i) => (
@@ -118,15 +124,15 @@ export default function MenopausePanel() {
 
       {/* Warm nights */}
       <div style={card}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: INK, fontFamily: font }}>Night sweats from WHOOP</p>
+        <p style={{ fontSize: 14, fontWeight: 700, color: INK, fontFamily: font }}>Possible night sweats from WHOOP</p>
         {!h.connected ? (
           <>
-            <p style={{ fontSize: 12.5, color: MUTED, fontFamily: font, lineHeight: 1.5, margin: "6px 0 10px" }}>WHOOP measures your skin temperature and wake-ups every night. Glitch flags nights that run hot <i>and</i> broken: likely night sweats.</p>
+            <p style={{ fontSize: 12.5, color: MUTED, fontFamily: font, lineHeight: 1.5, margin: "6px 0 10px" }}>WHOOP measures your skin temperature and wake-ups every night. Glitch flags nights that run hot <i>and</i> broken as possible night sweats. It's an estimate, not a validated measurement. <EvidenceSource id="wearable-hot-flash-detection" /></p>
             <button onClick={connectWhoopDemo} style={{ padding: "9px 14px", borderRadius: 12, border: "none", background: HEAT, color: "white", fontWeight: 700, fontSize: 12.5, fontFamily: font }}>Try with demo WHOOP data</button>
           </>
         ) : (
           <>
-            <p style={{ fontSize: 11.5, color: MUTED, fontFamily: font, marginBottom: 6 }}>Skin temperature vs your normal, last 30 nights. <span style={{ color: HEAT, fontWeight: 700 }}>Orange</span> = warm + disrupted.</p>
+            <p style={{ fontSize: 11.5, color: MUTED, fontFamily: font, marginBottom: 6 }}>Skin temperature vs your normal, last 30 nights. <span style={{ color: HEAT, fontWeight: 700 }}>Orange</span> = warm + disrupted (possible night sweat).</p>
             <div style={{ height: 120, marginLeft: -22 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chart} margin={{ top: 4, right: 6, bottom: 0, left: 0 }}>
@@ -140,7 +146,7 @@ export default function MenopausePanel() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <p style={{ fontSize: 10.5, color: MUTED, fontFamily: font, marginTop: 4 }}>WHOOP reports one temperature per night, so this spots night-sweat <i>nights</i>, not individual flashes.</p>
+            <p style={{ fontSize: 10.5, color: MUTED, fontFamily: font, marginTop: 4 }}>WHOOP reports one temperature per night, so this estimates possible night-sweat <i>nights</i> (skin temperature + broken sleep; not validated), not individual flashes. <EvidenceSource id="wearable-hot-flash-detection" /></p>
           </>
         )}
       </div>
@@ -151,16 +157,28 @@ export default function MenopausePanel() {
         {m.triggers.length ? (
           <div className="flex flex-col gap-1.5">
             {m.triggers.map((t) => (
-              <div key={t.trigger} className="flex items-center justify-between" style={{ padding: "9px 11px", borderRadius: 12, background: "oklch(0.63 0.17 35 / 0.08)" }}>
+              <div key={t.trigger} className="flex items-center justify-between gap-2" style={{ padding: "9px 11px", borderRadius: 12, background: "oklch(0.63 0.17 35 / 0.08)" }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: INK, fontFamily: font }}>{t.label}</p>
-                <p style={{ fontSize: 12, fontWeight: 700, color: HEAT, fontFamily: font }}>{t.ratio}× more flashes</p>
+                <p style={{ fontSize: 12, fontWeight: 700, color: HEAT, fontFamily: font, textAlign: "right" }}>{triggerEffect(t)}</p>
               </div>
             ))}
-            <p style={{ fontSize: 11, color: MUTED, fontFamily: font, marginTop: 2 }}>Based on {m.triggers[0].days}+ days with vs without each trigger. Try cutting one for two weeks and see if your count drops.</p>
+            <p style={{ fontSize: 11, color: MUTED, fontFamily: font, marginTop: 2 }}>Based on {Math.min(...m.triggers.map((t) => t.days))}+ days with vs without each trigger, permutation-tested with false-discovery control. Try cutting one for two weeks and see if your count drops.</p>
           </div>
         ) : (
-          <p style={{ fontSize: 12.5, color: MUTED, fontFamily: font, lineHeight: 1.5 }}>Log hot flashes and meals (photo or chat with Glitchy) for a week or two. Glitch will check alcohol, caffeine, spicy food, late meals, stress and warm nights for you.</p>
+          <p style={{ fontSize: 12.5, color: MUTED, fontFamily: font, lineHeight: 1.5 }}>{m.triggersUnclear.length ? "No clear trigger yet. Keep logging; patterns need a few more weeks to stand out from day-to-day noise." : "Log hot flashes and meals (photo or chat with Glitchy) for a week or two. Glitch will check alcohol, caffeine, spicy food, late meals, stress and warm nights for you."}</p>
         )}
+        {m.triggersUnclear.length > 0 && (
+          <p style={{ fontSize: 11, color: MUTED, fontFamily: font, marginTop: 6 }}>Tested, no clear link yet: {m.triggersUnclear.map((t) => t.label.toLowerCase()).join(", ")}.</p>
+        )}
+        {needDays !== undefined && (m.triggers.length === 0 || m.triggersUnclear.length > 0) && (
+          <p style={{ fontSize: 11, color: MUTED, fontFamily: font, marginTop: 4 }}>
+            With your ~{baseBucket} flashes/day, a trigger that raises flashes 1.5× usually needs {needDays ? `~${needDays} days` : "more than 6 months"} of logs to show up (80% power, simulated).
+          </p>
+        )}
+        {m.triggers.length + m.triggersUnclear.length > 0 && (
+          <p style={{ fontSize: 10.5, color: MUTED, fontFamily: font, marginTop: 4 }}>Association in your own logs, not proof of cause.</p>
+        )}
+        <p style={{ fontSize: 10.5, color: MUTED, fontFamily: font, marginTop: 4 }}>Some women notice alcohol, caffeine or spicy food sets off flashes, but research on these triggers is mixed, so your own logs are the better guide. <EvidenceSource id="hot-flash-diet-triggers" /></p>
       </div>
 
       {/* Training */}
@@ -173,7 +191,7 @@ export default function MenopausePanel() {
         <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>
           {m.training.today.session.map((s) => <li key={s} style={{ fontSize: 13, color: INK, fontFamily: font, marginBottom: 3 }}>{s}</li>)}
         </ul>
-        <p style={{ fontSize: 11.5, color: MUTED, fontFamily: font, marginTop: 6, lineHeight: 1.45 }}>Why: {m.training.today.why}</p>
+        <p style={{ fontSize: 11.5, color: MUTED, fontFamily: font, marginTop: 6, lineHeight: 1.45 }}>Why: {m.training.today.why} {m.training.today.focus === "Heavy strength" && <EvidenceSource id="liftmor-heavy-resistance-impact" label="LIFTMOR" />}</p>
         <div className="flex gap-1 mt-3">
           {m.training.week.map((d, i) => {
             const isToday = i === (new Date().getDay() + 6) % 7;

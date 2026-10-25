@@ -1,0 +1,140 @@
+{
+  "summary": {
+    "prevalenceMaxAbsDiff": 0.0,
+    "prevalenceSeMaxRelDiff": 0.0,
+    "regressionSeMaxRelDiffVsJackknife": 0.00309,
+    "verdict": "Prevalences and their SEs match the independent samplics survey library exactly; regression SEs agree with a delete-one-PSU jackknife within 0.3%."
+  },
+  "prevalence": [
+    {
+      "outcome": "High blood pressure",
+      "group": "pre",
+      "ours": 0.39074,
+      "samplics": 0.39074,
+      "oursSe": 0.02069,
+      "samplicsSe": 0.02069
+    },
+    {
+      "outcome": "High blood pressure",
+      "group": "post",
+      "ours": 0.54882,
+      "samplics": 0.54882,
+      "oursSe": 0.02087,
+      "samplicsSe": 0.02087
+    },
+    {
+      "outcome": "Depression symptoms",
+      "group": "pre",
+      "ours": 0.08517,
+      "samplics": 0.08517,
+      "oursSe": 0.00963,
+      "samplicsSe": 0.00963
+    },
+    {
+      "outcome": "Depression symptoms",
+      "group": "post",
+      "ours": 0.1049,
+      "samplics": 0.1049,
+      "oursSe": 0.0142,
+      "samplicsSe": 0.0142
+    },
+    {
+      "outcome": "Trouble sleeping",
+      "group": "pre",
+      "ours": 0.31134,
+      "samplics": 0.31134,
+      "oursSe": 0.0234,
+      "samplicsSe": 0.0234
+    },
+    {
+      "outcome": "Trouble sleeping",
+      "group": "post",
+      "ours": 0.40336,
+      "samplics": 0.40336,
+      "oursSe": 0.02577,
+      "samplicsSe": 0.02577
+    },
+    {
+      "outcome": "Short sleep",
+      "group": "pre",
+      "ours": 0.2634,
+      "samplics": 0.2634,
+      "oursSe": 0.01508,
+      "samplicsSe": 0.01508
+    },
+    {
+      "outcome": "Short sleep",
+      "group": "post",
+      "ours": 0.262,
+      "samplics": 0.262,
+      "oursSe": 0.02831,
+      "samplicsSe": 0.02831
+    },
+    {
+      "outcome": "Low bone mass",
+      "group": "pre",
+      "ours": 0.29354,
+      "samplics": 0.29354,
+      "oursSe": 0.0234,
+      "samplicsSe": 0.0234
+    },
+    {
+      "outcome": "Low bone mass",
+      "group": "post",
+      "ours": 0.54117,
+      "samplics": 0.54117,
+      "oursSe": 0.03228,
+      "samplicsSe": 0.03228
+    }
+  ],
+  "regression": [
+    {
+      "outcome": "High blood pressure",
+      "estimate": -0.00974,
+      "taylorSe": 0.20711,
+      "jackknifeSe": 0.20724
+    },
+    {
+      "outcome": "Depression symptoms",
+      "estimate": 0.46107,
+      "taylorSe": 0.2984,
+      "jackknifeSe": 0.29932
+    },
+    {
+      "outcome": "Trouble sleeping",
+      "estimate": 0.58229,
+      "taylorSe": 0.25462,
+      "jackknifeSe": 0.25474
+    },
+    {
+      "outcome": "Short sleep",
+      "estimate": -0.01532,
+      "taylorSe": 0.2135,
+      "jackknifeSe": 0.21363
+    },
+    {
+      "outcome": "Low bone mass",
+      "estimate": 0.62874,
+      "taylorSe": 0.32464,
+      "jackknifeSe": 0.3255
+    },
+    {
+      "outcome": "Systolic blood pressure",
+      "estimate": 0.53363,
+      "taylorSe": 1.75679,
+      "jackknifeSe": 1.75775
+    },
+    {
+      "outcome": "PHQ-9 depression score",
+      "estimate": 0.71455,
+      "taylorSe": 0.42533,
+      "jackknifeSe": 0.42552
+    },
+    {
+      "outcome": "Femoral-neck bone density",
+      "estimate": -0.05632,
+      "taylorSe": 0.01698,
+      "jackknifeSe": 0.017
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 /**
  * Glitch — Bone & strength card (Fitness tab, peri/menopausal women).
- * Explains why resistance + impact training matters around menopause, offers a modest starter
+ * Explains why loading exercise matters around menopause (all exercise helps; resistance + impact most), offers a modest starter
  * routine the user can add to their plan (which auto-enables Form Check for supported moves),
  * and cites its sources. Wellness insight, not a diagnosis.
  */
@@ -83,7 +83,7 @@ export default function BoneHealthCard() {
         })}
       </div>
 
-      <SourceLinks keys={["boneLossRate", "resistanceBmd", "sarcopenia"]} />
+      <SourceLinks keys={["boneLossRate", "resistanceBmd", "liftmor"]} />
     </motion.div>
   );
 }

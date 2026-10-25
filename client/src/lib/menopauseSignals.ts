@@ -2,10 +2,13 @@
  * Glitch — menopause signals, risk flags and research context.
  *
  * - Sleep fragmentation from WHOOP (wake-ups, minutes awake, efficiency) vs the user's own baseline.
- * - Blood pressure categories per the 2017 ACC/AHA guideline (BP is logged by voice/cuff; WHOOP's API
- *   doesn't expose it).
- * - Mental-health check combining HRV trend (low HRV is consistently linked with depression/anxiety),
- *   mood (voice check-ins), sleep and BP.
+ * - Blood pressure categories per the AHA/ACC high blood pressure guideline (2025 edition, which
+ *   replaced 2017 and kept the normal / elevated / stage 1 / stage 2 categories). BP is logged by
+ *   voice/cuff; WHOOP's API doesn't expose it. Evidence: evidence.ts "bp-categories-acc-aha".
+ *   NOTE: the 2025 full text isn't in PMC, so the thresholds weren't machine-checked against it.
+ * - Mental-health check combining HRV trend, mood (voice check-ins), sleep and BP. Lower HRV is
+ *   associated with depression at the *group* level (small effect, evidence.ts "hrv-lower-in-depression");
+ *   an individual HRV dip has many causes, so it is only ever one soft signal here.
  * - Ethnicity context from SWAN (Avis et al., JAMA Intern Med 2015): median total duration of
  *   frequent hot flashes/night sweats by group. Shown as optional, consented *group* context — never
  *   used to score an individual.
@@ -101,7 +104,7 @@ export function mentalHealthCheck(days: DailyPhysiology[], moods: { at: string; 
   const lastBp = bp[bp.length - 1];
 
   const reasons: string[] = [];
-  if (hrvChangePct != null && hrvChangePct <= -12) reasons.push(`HRV is ${Math.abs(hrvChangePct)}% below your usual. Your nervous system is under strain`);
+  if (hrvChangePct != null && hrvChangePct <= -12) reasons.push(`HRV is ${Math.abs(hrvChangePct)}% below your usual, which can happen with stress, poor sleep or illness`);
   if (avgMood7 != null && avgMood7 <= 2.5) reasons.push(`mood has averaged ${avgMood7}/5 this week`);
   if (Number.isFinite(sleep7) && sleep7 < 70) reasons.push(`sleep has averaged ${Math.round(sleep7)}%`);
   if (lastBp && ["stage1", "stage2", "crisis"].includes(bpCategory(lastBp.systolic, lastBp.diastolic))) reasons.push(`blood pressure is running high (${lastBp.systolic}/${lastBp.diastolic})`);
@@ -117,6 +120,8 @@ export interface MenoAlert {
   icon: string;
   title: string;
   detail: string;
+  /** evidence.ts id backing the alert's claim, for a "source" link */
+  evidenceId?: string;
 }
 
 export function menopauseAlerts(i: {
@@ -133,19 +138,21 @@ export function menopauseAlerts(i: {
   const out: MenoAlert[] = [];
   const last7 = (d: string) => now.getTime() - Date.parse(`${d}T12:00:00Z`) < 7 * DAY;
 
-  // Blood pressure (ACC/AHA)
+  // Blood pressure (AHA/ACC 2025 categories)
   const bp = i.bp.slice(-3);
   const last = bp[bp.length - 1];
   if (last) {
     const cat = bpCategory(last.systolic, last.diastolic);
     if (cat === "crisis") out.push({ id: `bp-crisis-${last.at}`, level: "urgent", icon: "🚨", title: `Very high blood pressure: ${last.systolic}/${last.diastolic}`, detail: "Rest 5 minutes and re-measure. If it's still above 180/120, or you have chest pain, shortness of breath, vision changes or weakness, call 911." });
     else if (bp.length >= 2 && bp.every((r) => ["stage1", "stage2"].includes(bpCategory(r.systolic, r.diastolic))))
-      out.push({ id: `bp-high-${today}`, level: "watch", icon: "🩺", title: "Blood pressure has been high on repeat readings", detail: `Last ${bp.length}: ${bp.map((r) => `${r.systolic}/${r.diastolic}`).join(", ")}. Heart risk rises after menopause, so book a check with your doctor.` });
+      out.push({ id: `bp-high-${today}`, level: "watch", icon: "🩺", title: "Blood pressure has been high on repeat readings", detail: `Last ${bp.length}: ${bp.map((r) => `${r.systolic}/${r.diastolic}`).join(", ")}. Heart risk rises after menopause and blood pressure often climbs too (not for everyone), so book a check with your doctor.`, evidenceId: "bp-rises-after-menopause" });
   }
 
   // Night sweats
   const warm7 = i.warm.filter((w) => w.likely && last7(w.date)).length;
-  if (warm7 >= 3) out.push({ id: `sweats-${today}`, level: "watch", icon: "🌙", title: `Night sweats ${warm7} of the last 7 nights`, detail: "Try a cooler room (around 18 °C / 65 °F), layered bedding and no alcohol within 3 h of bed. If they're wrecking your sleep, effective treatments exist, so talk to your doctor." });
+  // "Possible" night sweats: an unvalidated estimate (evidence.ts "wearable-hot-flash-detection").
+  // Comfort tips are optional; NAMS 2023 doesn't rate cooling or trigger avoidance as proven treatment.
+  if (warm7 >= 3) out.push({ id: `sweats-${today}`, level: "watch", icon: "🌙", title: `Possible night sweats ${warm7} of the last 7 nights`, detail: "Estimated from skin temperature and broken sleep (not a validated measure). Optional comfort ideas: a cooler room, layered bedding, and noticing whether evening drinks make a difference for you. If night sweats are wrecking your sleep, proven options include hormone therapy, CBT and non-hormonal medicines, so talk to your doctor.", evidenceId: "hormone-therapy-most-effective-vms" });
 
   // Sleep fragmentation
   const frag7 = i.frag.filter((f) => f.score != null && last7(f.date));
@@ -159,10 +166,10 @@ export function menopauseAlerts(i: {
   // Staging
   if (i.stage.timing === "premature") out.push({ id: "stage-poi", level: "urgent", icon: "⚠️", title: "Periods stopped before 40", detail: "Please see a doctor about premature menopause (POI). Treatment protects your heart and bones." });
   else if (i.stage.timing === "early") out.push({ id: "stage-early", level: "watch", icon: "📋", title: "Early menopause (before 45)", detail: "Ask your doctor about bone and heart protection, including whether hormone therapy suits you." });
-  if (i.stage.stage === "late_transition") out.push({ id: "stage-late", level: "info", icon: "🌗", title: "Late perimenopause", detail: "60+ days since your last period. Hot flashes often peak now. If you bleed again after 12 months without a period, see a doctor." });
+  if (i.stage.stage === "late_transition") out.push({ id: "stage-late", level: "info", icon: "🌗", title: "Late perimenopause", detail: "60+ days since your last period. Hot flashes are common now and most likely in the first couple of years after your final period. If you bleed again after 12 months without a period, see a doctor.", evidenceId: "straw10-staging" });
 
   // Mental health
-  if (i.mind.level === "reach_out") out.push({ id: `mind-${today}`, level: "urgent", icon: "💙", title: "Your body and mood both need care", detail: `${i.mind.reasons.join("; ")}. Please talk to someone: your doctor, or call/text 988 any time.` });
+  if (i.mind.level === "reach_out") out.push({ id: `mind-${today}`, level: "urgent", icon: "💙", title: "Your body and mood both need care", detail: `${i.mind.reasons.join("; ")}. Please talk to someone: your doctor, or call/text 988 any time.`, evidenceId: "depression-risk-perimenopause" });
   else if (i.mind.level === "watch" && i.mind.reasons.length >= 2) out.push({ id: `mind-${today}`, level: "watch", icon: "💙", title: "Mental health check-in", detail: `${i.mind.reasons.join("; ")}. Be gentle with yourself this week; a short walk and an early night help.` });
 
   const rank = { urgent: 0, watch: 1, info: 2 };

@@ -126,6 +126,20 @@ Use these instead of hard-coded colours so every screen looks the same.
 Raw datasets are **never committed**. `scripts/data/` is git-ignored. Only trained coefficients and
 aggregate settings live in `client/src/lib/models/`.
 
+### Population analysis (NHANES 2013–2018, CDC: public domain)
+- 1,941 US women aged 40–59, pre- vs naturally post-menopausal. Survey-weighted regression with design-based CIs, FDR correction, sensitivity and equity analyses.
+- Full write-up: [docs/nhanes-menopause-report.md](docs/nhanes-menopause-report.md). Ethics: [docs/ETHICS.md](docs/ETHICS.md).
+
+```bash
+.venv/bin/pip install -r scripts/requirements.txt
+.venv/bin/python scripts/analyze_nhanes_menopause.py    # downloads NHANES, writes models/nhanesMenopause.json + report
+.venv/bin/python scripts/validate_nhanes_estimator.py   # cross-checks vs samplics + jackknife
+pnpm power:triggers                                     # power + false-positive simulation for trigger detection
+```
+
+### Evidence library (PubMed)
+- `client/src/lib/evidence.ts`: 28 claims backed by 44 verified PMIDs. Audit of app wording: [docs/claim-audit.md](docs/claim-audit.md).
+
 ### Hot-flash risk model (TSHS Hot Flashes dataset)
 - Source: https://www.causeweb.org/tshs/hot-flashes/ (CC BY-NC-SA 4.0, educational use).
 - Logistic regression; cross-validated AUC 0.735 (profile) / 0.753 (with FSH and estradiol labs). Race and education are deliberately excluded.

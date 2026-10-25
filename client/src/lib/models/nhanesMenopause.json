@@ -1,0 +1,1312 @@
+{
+  "name": "NHANES menopause and health analysis",
+  "source": "National Health and Nutrition Examination Survey 2013–2014, 2015–2016, 2017–2018 (CDC/NCHS)",
+  "url": "https://wwwn.cdc.gov/nchs/nhanes/",
+  "license": "Public domain (US federal government data). De-identified; no individual rows are stored in this app.",
+  "population": "US women aged 40–59, pre-menopausal vs naturally post-menopausal",
+  "method": "Survey-weighted logistic/linear regression adjusted for age, age², BMI and smoking; design-based (Taylor linearisation) 95% CIs; Benjamini–Hochberg FDR across outcomes; predictive-margin risk differences.",
+  "designDf": 45,
+  "flow": {
+    "women40to59Examined": 2948,
+    "surgicalExcluded": 513,
+    "unknownStatusExcluded": 494,
+    "analysed": 1941,
+    "pre": 1180,
+    "post": 761
+  },
+  "ageAtFinalPeriod": {
+    "mean": {
+      "est": 48.2037,
+      "lo": 47.4517,
+      "hi": 48.9556,
+      "se": 0.3733
+    },
+    "earlyUnder45": {
+      "est": 0.1923,
+      "lo": 0.1403,
+      "hi": 0.2443,
+      "se": 0.0258
+    },
+    "note": "Self-reported, among post-menopausal women aged 40–59 (younger women who have not yet reached menopause are not counted, so this is not a population average)."
+  },
+  "outcomes": [
+    {
+      "key": "hypertension",
+      "label": "High blood pressure",
+      "kind": "binary",
+      "definition": "≥130/80 mmHg or taking BP medication",
+      "crude": {
+        "pre": {
+          "est": 0.3907,
+          "lo": 0.3491,
+          "hi": 0.4324,
+          "se": 0.0207
+        },
+        "post": {
+          "est": 0.5488,
+          "lo": 0.5068,
+          "hi": 0.5908,
+          "se": 0.0209
+        }
+      },
+      "adjusted": {
+        "n": 1866,
+        "nPre": 1132,
+        "nPost": 734,
+        "p": 0.9627,
+        "suppressed": false,
+        "or": 0.9903,
+        "orLo": 0.6525,
+        "orHi": 1.5029,
+        "adjPre": 0.4589,
+        "adjPost": 0.4569,
+        "diff": -0.002,
+        "diffLo": -0.0887,
+        "diffHi": 0.0847,
+        "q": 0.9627
+      },
+      "sensitivity": {
+        "unadjusted": {
+          "n": 1886,
+          "nPre": 1146,
+          "nPost": 740,
+          "p": 0.0,
+          "suppressed": false,
+          "or": 1.8967,
+          "orLo": 1.552,
+          "orHi": 2.3179,
+          "adjPre": 0.3907,
+          "adjPost": 0.5488,
+          "diff": 0.1581,
+          "diffLo": 0.1094,
+          "diffHi": 0.2068
+        },
+        "plusSocial": {
+          "n": 1694,
+          "nPre": 1025,
+          "nPost": 669,
+          "p": 0.7177,
+          "suppressed": false,
+          "or": 0.9137,
+          "orLo": 0.5543,
+          "orHi": 1.506,
+          "adjPre": 0.4707,
+          "adjPost": 0.4526,
+          "diff": -0.018,
+          "diffLo": -0.1169,
+          "diffHi": 0.0809
+        },
+        "age45to55": {
+          "n": 1003,
+          "nPre": 581,
+          "nPost": 422,
+          "p": 0.8656,
+          "suppressed": false,
+          "or": 1.0418,
+          "orLo": 0.6419,
+          "orHi": 1.6907,
+          "adjPre": 0.4585,
+          "adjPost": 0.4671,
+          "diff": 0.0086,
+          "diffLo": -0.0935,
+          "diffHi": 0.1107
+        },
+        "noHormoneTherapy": {
+          "n": 1704,
+          "nPre": 1081,
+          "nPost": 623,
+          "p": 0.791,
+          "suppressed": false,
+          "or": 1.0624,
+          "orLo": 0.6725,
+          "orHi": 1.6782,
+          "adjPre": 0.4593,
+          "adjPost": 0.4721,
+          "diff": 0.0128,
+          "diffLo": -0.0845,
+          "diffHi": 0.1102
+        }
+      },
+      "byRace": {
+        "Asian (non-Hispanic)": {
+          "n": 268,
+          "nPre": 174,
+          "nPost": 94,
+          "p": 0.5894,
+          "suppressed": false,
+          "or": 1.2516,
+          "orLo": 0.5449,
+          "orHi": 2.8747,
+          "adjPre": 0.4341,
+          "adjPost": 0.4817,
+          "diff": 0.0476,
+          "diffLo": -0.1343,
+          "diffHi": 0.2294
+        },
+        "Black (non-Hispanic)": {
+          "n": 398,
+          "nPre": 254,
+          "nPost": 144,
+          "p": 0.466,
+          "suppressed": false,
+          "or": 1.4019,
+          "orLo": 0.5557,
+          "orHi": 3.5369,
+          "adjPre": 0.6515,
+          "adjPost": 0.7187,
+          "diff": 0.0672,
+          "diffLo": -0.1155,
+          "diffHi": 0.2499
+        },
+        "Hispanic": {
+          "n": 528,
+          "nPre": 317,
+          "nPost": 211,
+          "p": 0.5207,
+          "suppressed": false,
+          "or": 0.8142,
+          "orLo": 0.4296,
+          "orHi": 1.5432,
+          "adjPre": 0.4399,
+          "adjPost": 0.3962,
+          "diff": -0.0437,
+          "diffLo": -0.1778,
+          "diffHi": 0.0903
+        },
+        "Other / multiracial": {
+          "n": 58,
+          "nPre": 37,
+          "nPost": 21,
+          "suppressed": true
+        },
+        "White (non-Hispanic)": {
+          "n": 614,
+          "nPre": 350,
+          "nPost": 264,
+          "p": 0.8493,
+          "suppressed": false,
+          "or": 0.9441,
+          "orLo": 0.5151,
+          "orHi": 1.7306,
+          "adjPre": 0.4329,
+          "adjPost": 0.4216,
+          "diff": -0.0113,
+          "diffLo": -0.13,
+          "diffHi": 0.1073
+        }
+      },
+      "raceInteractionP": 0.4823,
+      "significant": false
+    },
+    {
+      "key": "depression",
+      "label": "Depression symptoms",
+      "kind": "binary",
+      "definition": "PHQ-9 score 10 or more",
+      "crude": {
+        "pre": {
+          "est": 0.0852,
+          "lo": 0.0658,
+          "hi": 0.1046,
+          "se": 0.0096
+        },
+        "post": {
+          "est": 0.1049,
+          "lo": 0.0763,
+          "hi": 0.1335,
+          "se": 0.0142
+        }
+      },
+      "adjusted": {
+        "n": 1906,
+        "nPre": 1157,
+        "nPost": 749,
+        "p": 0.1293,
+        "suppressed": false,
+        "or": 1.5858,
+        "orLo": 0.8694,
+        "orHi": 2.8924,
+        "adjPre": 0.0789,
+        "adjPost": 0.1158,
+        "diff": 0.0369,
+        "diffLo": -0.0145,
+        "diffHi": 0.0883,
+        "q": 0.2069
+      },
+      "sensitivity": {
+        "unadjusted": {
+          "n": 1929,
+          "nPre": 1173,
+          "nPost": 756,
+          "p": 0.2443,
+          "suppressed": false,
+          "or": 1.2588,
+          "orLo": 0.8498,
+          "orHi": 1.8647,
+          "adjPre": 0.0852,
+          "adjPost": 0.1049,
+          "diff": 0.0197,
+          "diffLo": -0.0148,
+          "diffHi": 0.0542
+        },
+        "plusSocial": {
+          "n": 1727,
+          "nPre": 1046,
+          "nPost": 681,
+          "p": 0.0809,
+          "suppressed": false,
+          "or": 1.7094,
+          "orLo": 0.9338,
+          "orHi": 3.1291,
+          "adjPre": 0.0783,
+          "adjPost": 0.1207,
+          "diff": 0.0424,
+          "diffLo": -0.0103,
+          "diffHi": 0.0952
+        },
+        "age45to55": {
+          "n": 1020,
+          "nPre": 588,
+          "nPost": 432,
+          "p": 0.0527,
+          "suppressed": false,
+          "or": 1.8205,
+          "orLo": 0.9928,
+          "orHi": 3.3383,
+          "adjPre": 0.0664,
+          "adjPost": 0.1115,
+          "diff": 0.0451,
+          "diffLo": -0.0039,
+          "diffHi": 0.0941
+        },
+        "noHormoneTherapy": {
+          "n": 1745,
+          "nPre": 1107,
+          "nPost": 638,
+          "p": 0.1784,
+          "suppressed": false,
+          "or": 1.6454,
+          "orLo": 0.79,
+          "orHi": 3.4268,
+          "adjPre": 0.0757,
+          "adjPost": 0.115,
+          "diff": 0.0393,
+          "diffLo": -0.0237,
+          "diffHi": 0.1024
+        }
+      },
+      "byRace": {
+        "Asian (non-Hispanic)": {
+          "n": 278,
+          "nPre": 184,
+          "nPost": 94,
+          "suppressed": true
+        },
+        "Black (non-Hispanic)": {
+          "n": 403,
+          "nPre": 254,
+          "nPost": 149,
+          "p": 0.6681,
+          "suppressed": false,
+          "or": 1.1805,
+          "orLo": 0.5442,
+          "orHi": 2.5607,
+          "adjPre": 0.0835,
+          "adjPost": 0.0966,
+          "diff": 0.0132,
+          "diffLo": -0.0508,
+          "diffHi": 0.0771
+        },
+        "Hispanic": {
+          "n": 539,
+          "nPre": 324,
+          "nPost": 215,
+          "p": 0.2482,
+          "suppressed": false,
+          "or": 1.6675,
+          "orLo": 0.6914,
+          "orHi": 4.0217,
+          "adjPre": 0.0971,
+          "adjPost": 0.1485,
+          "diff": 0.0515,
+          "diffLo": -0.0418,
+          "diffHi": 0.1448
+        },
+        "Other / multiracial": {
+          "n": 60,
+          "nPre": 38,
+          "nPost": 22,
+          "suppressed": true
+        },
+        "White (non-Hispanic)": {
+          "n": 626,
+          "nPre": 357,
+          "nPost": 269,
+          "p": 0.4259,
+          "suppressed": false,
+          "or": 1.4231,
+          "orLo": 0.5877,
+          "orHi": 3.4462,
+          "adjPre": 0.0773,
+          "adjPost": 0.1035,
+          "diff": 0.0262,
+          "diffLo": -0.0429,
+          "diffHi": 0.0953
+        }
+      },
+      "raceInteractionP": 0.3664,
+      "significant": false
+    },
+    {
+      "key": "sleep_trouble",
+      "label": "Trouble sleeping",
+      "kind": "binary",
+      "definition": "Has told a doctor about trouble sleeping",
+      "crude": {
+        "pre": {
+          "est": 0.3113,
+          "lo": 0.2642,
+          "hi": 0.3585,
+          "se": 0.0234
+        },
+        "post": {
+          "est": 0.4034,
+          "lo": 0.3515,
+          "hi": 0.4553,
+          "se": 0.0258
+        }
+      },
+      "adjusted": {
+        "n": 1915,
+        "nPre": 1162,
+        "nPost": 753,
+        "p": 0.027,
+        "suppressed": false,
+        "or": 1.7901,
+        "orLo": 1.0719,
+        "orHi": 2.9895,
+        "adjPre": 0.2969,
+        "adjPost": 0.4254,
+        "diff": 0.1285,
+        "diffLo": 0.0157,
+        "diffHi": 0.2413,
+        "q": 0.1078
+      },
+      "sensitivity": {
+        "unadjusted": {
+          "n": 1938,
+          "nPre": 1178,
+          "nPost": 760,
+          "p": 0.0165,
+          "suppressed": false,
+          "or": 1.4954,
+          "orLo": 1.0802,
+          "orHi": 2.0702,
+          "adjPre": 0.3113,
+          "adjPost": 0.4034,
+          "diff": 0.092,
+          "diffLo": 0.018,
+          "diffHi": 0.1661
+        },
+        "plusSocial": {
+          "n": 1732,
+          "nPre": 1049,
+          "nPost": 683,
+          "p": 0.0298,
+          "suppressed": false,
+          "or": 1.9159,
+          "orLo": 1.0689,
+          "orHi": 3.4342,
+          "adjPre": 0.2984,
+          "adjPost": 0.4409,
+          "diff": 0.1425,
+          "diffLo": 0.0164,
+          "diffHi": 0.2686
+        },
+        "age45to55": {
+          "n": 1026,
+          "nPre": 592,
+          "nPost": 434,
+          "p": 0.1151,
+          "suppressed": false,
+          "or": 1.5389,
+          "orLo": 0.8965,
+          "orHi": 2.6414,
+          "adjPre": 0.3076,
+          "adjPost": 0.4025,
+          "diff": 0.0949,
+          "diffLo": -0.0239,
+          "diffHi": 0.2137
+        },
+        "noHormoneTherapy": {
+          "n": 1752,
+          "nPre": 1111,
+          "nPost": 641,
+          "p": 0.0767,
+          "suppressed": false,
+          "or": 1.6969,
+          "orLo": 0.9426,
+          "orHi": 3.055,
+          "adjPre": 0.295,
+          "adjPost": 0.4105,
+          "diff": 0.1155,
+          "diffLo": -0.0135,
+          "diffHi": 0.2444
+        }
+      },
+      "byRace": {
+        "Asian (non-Hispanic)": {
+          "n": 280,
+          "nPre": 184,
+          "nPost": 96,
+          "p": 0.0987,
+          "suppressed": false,
+          "or": 0.4703,
+          "orLo": 0.191,
+          "orHi": 1.1581,
+          "adjPre": 0.1976,
+          "adjPost": 0.1053,
+          "diff": -0.0924,
+          "diffLo": -0.1939,
+          "diffHi": 0.0092
+        },
+        "Black (non-Hispanic)": {
+          "n": 407,
+          "nPre": 257,
+          "nPost": 150,
+          "p": 0.0307,
+          "suppressed": false,
+          "or": 2.0071,
+          "orLo": 1.0701,
+          "orHi": 3.7643,
+          "adjPre": 0.3112,
+          "adjPost": 0.4703,
+          "diff": 0.1592,
+          "diffLo": 0.0182,
+          "diffHi": 0.3001
+        },
+        "Hispanic": {
+          "n": 541,
+          "nPre": 324,
+          "nPost": 217,
+          "p": 0.4906,
+          "suppressed": false,
+          "or": 0.8453,
+          "orLo": 0.5194,
+          "orHi": 1.3756,
+          "adjPre": 0.2707,
+          "adjPost": 0.2399,
+          "diff": -0.0308,
+          "diffLo": -0.1196,
+          "diffHi": 0.0579
+        },
+        "Other / multiracial": {
+          "n": 60,
+          "nPre": 38,
+          "nPost": 22,
+          "suppressed": true
+        },
+        "White (non-Hispanic)": {
+          "n": 627,
+          "nPre": 359,
+          "nPost": 268,
+          "p": 0.0329,
+          "suppressed": false,
+          "or": 2.2053,
+          "orLo": 1.0695,
+          "orHi": 4.5476,
+          "adjPre": 0.2996,
+          "adjPost": 0.4779,
+          "diff": 0.1783,
+          "diffLo": 0.0224,
+          "diffHi": 0.3342
+        }
+      },
+      "raceInteractionP": 0.3457,
+      "significant": false
+    },
+    {
+      "key": "short_sleep",
+      "label": "Short sleep",
+      "kind": "binary",
+      "definition": "Usually under 7 hours a night",
+      "crude": {
+        "pre": {
+          "est": 0.2634,
+          "lo": 0.233,
+          "hi": 0.2938,
+          "se": 0.0151
+        },
+        "post": {
+          "est": 0.262,
+          "lo": 0.205,
+          "hi": 0.319,
+          "se": 0.0283
+        }
+      },
+      "adjusted": {
+        "n": 1914,
+        "nPre": 1162,
+        "nPost": 752,
+        "p": 0.9431,
+        "suppressed": false,
+        "or": 0.9848,
+        "orLo": 0.6406,
+        "orHi": 1.5139,
+        "adjPre": 0.2644,
+        "adjPost": 0.2615,
+        "diff": -0.0029,
+        "diffLo": -0.0846,
+        "diffHi": 0.0788,
+        "q": 0.9627
+      },
+      "sensitivity": {
+        "unadjusted": {
+          "n": 1937,
+          "nPre": 1178,
+          "nPost": 759,
+          "p": 0.963,
+          "suppressed": false,
+          "or": 0.9928,
+          "orLo": 0.7256,
+          "orHi": 1.3584,
+          "adjPre": 0.2634,
+          "adjPost": 0.262,
+          "diff": -0.0014,
+          "diffLo": -0.0621,
+          "diffHi": 0.0593
+        },
+        "plusSocial": {
+          "n": 1731,
+          "nPre": 1049,
+          "nPost": 682,
+          "p": 0.5259,
+          "suppressed": false,
+          "or": 0.8761,
+          "orLo": 0.5776,
+          "orHi": 1.329,
+          "adjPre": 0.2731,
+          "adjPost": 0.2483,
+          "diff": -0.0248,
+          "diffLo": -0.1024,
+          "diffHi": 0.0528
+        },
+        "age45to55": {
+          "n": 1025,
+          "nPre": 592,
+          "nPost": 433,
+          "p": 0.8868,
+          "suppressed": false,
+          "or": 0.9674,
+          "orLo": 0.6067,
+          "orHi": 1.5425,
+          "adjPre": 0.2447,
+          "adjPost": 0.2387,
+          "diff": -0.006,
+          "diffLo": -0.0898,
+          "diffHi": 0.0778
+        },
+        "noHormoneTherapy": {
+          "n": 1751,
+          "nPre": 1111,
+          "nPost": 640,
+          "p": 0.4221,
+          "suppressed": false,
+          "or": 1.2185,
+          "orLo": 0.7455,
+          "orHi": 1.9915,
+          "adjPre": 0.2523,
+          "adjPost": 0.2907,
+          "diff": 0.0384,
+          "diffLo": -0.0579,
+          "diffHi": 0.1348
+        }
+      },
+      "byRace": {
+        "Asian (non-Hispanic)": {
+          "n": 281,
+          "nPre": 185,
+          "nPost": 96,
+          "p": 0.6875,
+          "suppressed": false,
+          "or": 1.1976,
+          "orLo": 0.4884,
+          "orHi": 2.9365,
+          "adjPre": 0.2122,
+          "adjPost": 0.2436,
+          "diff": 0.0314,
+          "diffLo": -0.1279,
+          "diffHi": 0.1907
+        },
+        "Black (non-Hispanic)": {
+          "n": 407,
+          "nPre": 257,
+          "nPost": 150,
+          "p": 0.1828,
+          "suppressed": false,
+          "or": 0.6807,
+          "orLo": 0.384,
+          "orHi": 1.2068,
+          "adjPre": 0.4082,
+          "adjPost": 0.3197,
+          "diff": -0.0885,
+          "diffLo": -0.2177,
+          "diffHi": 0.0408
+        },
+        "Hispanic": {
+          "n": 540,
+          "nPre": 323,
+          "nPost": 217,
+          "p": 0.5546,
+          "suppressed": false,
+          "or": 1.2086,
+          "orLo": 0.6366,
+          "orHi": 2.2946,
+          "adjPre": 0.2615,
+          "adjPost": 0.2995,
+          "diff": 0.038,
+          "diffLo": -0.0909,
+          "diffHi": 0.167
+        },
+        "Other / multiracial": {
+          "n": 60,
+          "nPre": 38,
+          "nPost": 22,
+          "suppressed": true
+        },
+        "White (non-Hispanic)": {
+          "n": 626,
+          "nPre": 359,
+          "nPost": 267,
+          "p": 0.9031,
+          "suppressed": false,
+          "or": 1.0394,
+          "orLo": 0.5507,
+          "orHi": 1.9614,
+          "adjPre": 0.2378,
+          "adjPost": 0.2446,
+          "diff": 0.0068,
+          "diffLo": -0.1058,
+          "diffHi": 0.1195
+        }
+      },
+      "raceInteractionP": 0.0853,
+      "significant": false
+    },
+    {
+      "key": "low_bone",
+      "label": "Low bone mass",
+      "kind": "binary",
+      "definition": "Femoral-neck T-score −1 or lower",
+      "crude": {
+        "pre": {
+          "est": 0.2935,
+          "lo": 0.2464,
+          "hi": 0.3407,
+          "se": 0.0234
+        },
+        "post": {
+          "est": 0.5412,
+          "lo": 0.4762,
+          "hi": 0.6062,
+          "se": 0.0323
+        }
+      },
+      "adjusted": {
+        "n": 833,
+        "nPre": 428,
+        "nPost": 405,
+        "p": 0.0591,
+        "suppressed": false,
+        "or": 1.8752,
+        "orLo": 0.9752,
+        "orHi": 3.606,
+        "adjPre": 0.3531,
+        "adjPost": 0.4757,
+        "diff": 0.1226,
+        "diffLo": -0.0046,
+        "diffHi": 0.2498,
+        "q": 0.1575
+      },
+      "sensitivity": {
+        "unadjusted": {
+          "n": 839,
+          "nPre": 431,
+          "nPost": 408,
+          "p": 0.0,
+          "suppressed": false,
+          "or": 2.8386,
+          "orLo": 2.1111,
+          "orHi": 3.8169,
+          "adjPre": 0.2935,
+          "adjPost": 0.5412,
+          "diff": 0.2476,
+          "diffLo": 0.1785,
+          "diffHi": 0.3167
+        },
+        "plusSocial": {
+          "n": 758,
+          "nPre": 394,
+          "nPost": 364,
+          "p": 0.0775,
+          "suppressed": false,
+          "or": 1.8093,
+          "orLo": 0.9342,
+          "orHi": 3.5041,
+          "adjPre": 0.3596,
+          "adjPost": 0.4727,
+          "diff": 0.1131,
+          "diffLo": -0.0138,
+          "diffHi": 0.24
+        },
+        "age45to55": {
+          "n": 455,
+          "nPre": 231,
+          "nPost": 224,
+          "p": 0.2182,
+          "suppressed": false,
+          "or": 1.5305,
+          "orLo": 0.7704,
+          "orHi": 3.0407,
+          "adjPre": 0.3668,
+          "adjPost": 0.4553,
+          "diff": 0.0885,
+          "diffLo": -0.0549,
+          "diffHi": 0.232
+        },
+        "noHormoneTherapy": {
+          "n": 750,
+          "nPre": 407,
+          "nPost": 343,
+          "p": 0.0627,
+          "suppressed": false,
+          "or": 2.0094,
+          "orLo": 0.9622,
+          "orHi": 4.1962,
+          "adjPre": 0.3344,
+          "adjPost": 0.4686,
+          "diff": 0.1342,
+          "diffLo": -0.0081,
+          "diffHi": 0.2764
+        }
+      },
+      "byRace": {
+        "Asian (non-Hispanic)": {
+          "n": 124,
+          "nPre": 62,
+          "nPost": 62,
+          "p": 0.0358,
+          "suppressed": false,
+          "or": 6.3172,
+          "orLo": 1.1359,
+          "orHi": 35.1327,
+          "adjPre": 0.4487,
+          "adjPost": 0.7679,
+          "diff": 0.3192,
+          "diffLo": 0.0534,
+          "diffHi": 0.585
+        },
+        "Black (non-Hispanic)": {
+          "n": 149,
+          "nPre": 83,
+          "nPost": 66,
+          "p": 0.0454,
+          "suppressed": false,
+          "or": 5.3662,
+          "orLo": 1.0362,
+          "orHi": 27.7907,
+          "adjPre": 0.0812,
+          "adjPost": 0.2702,
+          "diff": 0.189,
+          "diffLo": 0.0122,
+          "diffHi": 0.3658
+        },
+        "Hispanic": {
+          "n": 224,
+          "nPre": 104,
+          "nPost": 120,
+          "p": 0.0111,
+          "suppressed": false,
+          "or": 5.7853,
+          "orLo": 1.5224,
+          "orHi": 21.9852,
+          "adjPre": 0.2118,
+          "adjPost": 0.54,
+          "diff": 0.3281,
+          "diffLo": 0.0878,
+          "diffHi": 0.5684
+        },
+        "Other / multiracial": {
+          "n": 23,
+          "nPre": 10,
+          "nPost": 13,
+          "suppressed": true
+        },
+        "White (non-Hispanic)": {
+          "n": 313,
+          "nPre": 169,
+          "nPost": 144,
+          "p": 0.5413,
+          "suppressed": false,
+          "or": 1.2612,
+          "orLo": 0.5903,
+          "orHi": 2.6946,
+          "adjPre": 0.4258,
+          "adjPost": 0.4725,
+          "diff": 0.0466,
+          "diffLo": -0.1066,
+          "diffHi": 0.1999
+        }
+      },
+      "raceInteractionP": 0.3452,
+      "significant": false
+    },
+    {
+      "key": "sbp",
+      "label": "Systolic blood pressure",
+      "kind": "continuous",
+      "definition": "mmHg, average of exam readings",
+      "crude": {
+        "pre": {
+          "est": 119.3286,
+          "lo": 118.1651,
+          "hi": 120.4921,
+          "se": 0.5777
+        },
+        "post": {
+          "est": 124.8917,
+          "lo": 123.0828,
+          "hi": 126.7005,
+          "se": 0.8981
+        }
+      },
+      "adjusted": {
+        "n": 1866,
+        "nPre": 1132,
+        "nPost": 734,
+        "p": 0.7627,
+        "suppressed": false,
+        "diff": 0.5336,
+        "diffLo": -3.0047,
+        "diffHi": 4.072,
+        "q": 0.9627
+      },
+      "sensitivity": {
+        "unadjusted": {
+          "n": 1886,
+          "nPre": 1146,
+          "nPost": 740,
+          "p": 0.0,
+          "suppressed": false,
+          "diff": 5.5631,
+          "diffLo": 3.6381,
+          "diffHi": 7.4881
+        },
+        "plusSocial": {
+          "n": 1694,
+          "nPre": 1025,
+          "nPost": 669,
+          "p": 0.9955,
+          "suppressed": false,
+          "diff": -0.0086,
+          "diffLo": -3.0886,
+          "diffHi": 3.0714
+        },
+        "age45to55": {
+          "n": 1003,
+          "nPre": 581,
+          "nPost": 422,
+          "p": 0.629,
+          "suppressed": false,
+          "diff": 0.9606,
+          "diffLo": -3.0166,
+          "diffHi": 4.9378
+        },
+        "noHormoneTherapy": {
+          "n": 1704,
+          "nPre": 1081,
+          "nPost": 623,
+          "p": 0.4035,
+          "suppressed": false,
+          "diff": 1.5574,
+          "diffLo": -2.162,
+          "diffHi": 5.2767
+        }
+      },
+      "byRace": {
+        "Asian (non-Hispanic)": {
+          "n": 268,
+          "nPre": 174,
+          "nPost": 94,
+          "p": 0.8476,
+          "suppressed": false,
+          "diff": 0.5402,
+          "diffLo": -5.0877,
+          "diffHi": 6.1681
+        },
+        "Black (non-Hispanic)": {
+          "n": 398,
+          "nPre": 254,
+          "nPost": 144,
+          "p": 0.2903,
+          "suppressed": false,
+          "diff": -2.9461,
+          "diffLo": -8.4918,
+          "diffHi": 2.5996
+        },
+        "Hispanic": {
+          "n": 528,
+          "nPre": 317,
+          "nPost": 211,
+          "p": 0.6603,
+          "suppressed": false,
+          "diff": -1.1981,
+          "diffLo": -6.6514,
+          "diffHi": 4.2553
+        },
+        "Other / multiracial": {
+          "n": 58,
+          "nPre": 37,
+          "nPost": 21,
+          "suppressed": true
+        },
+        "White (non-Hispanic)": {
+          "n": 614,
+          "nPre": 350,
+          "nPost": 264,
+          "p": 0.6641,
+          "suppressed": false,
+          "diff": 0.9956,
+          "diffLo": -3.5911,
+          "diffHi": 5.5823
+        }
+      },
+      "raceInteractionP": 0.412,
+      "significant": false
+    },
+    {
+      "key": "phq9",
+      "label": "PHQ-9 depression score",
+      "kind": "continuous",
+      "definition": "0–27",
+      "crude": {
+        "pre": {
+          "est": 3.2599,
+          "lo": 2.9671,
+          "hi": 3.5528,
+          "se": 0.1454
+        },
+        "post": {
+          "est": 3.7022,
+          "lo": 3.1635,
+          "hi": 4.2409,
+          "se": 0.2675
+        }
+      },
+      "adjusted": {
+        "n": 1906,
+        "nPre": 1157,
+        "nPost": 749,
+        "p": 0.0999,
+        "suppressed": false,
+        "diff": 0.7145,
+        "diffLo": -0.1421,
+        "diffHi": 1.5712,
+        "q": 0.1998
+      },
+      "sensitivity": {
+        "unadjusted": {
+          "n": 1929,
+          "nPre": 1173,
+          "nPost": 756,
+          "p": 0.1579,
+          "suppressed": false,
+          "diff": 0.4422,
+          "diffLo": -0.178,
+          "diffHi": 1.0625
+        },
+        "plusSocial": {
+          "n": 1727,
+          "nPre": 1046,
+          "nPost": 681,
+          "p": 0.1419,
+          "suppressed": false,
+          "diff": 0.6767,
+          "diffLo": -0.2349,
+          "diffHi": 1.5882
+        },
+        "age45to55": {
+          "n": 1020,
+          "nPre": 588,
+          "nPost": 432,
+          "p": 0.1666,
+          "suppressed": false,
+          "diff": 0.6263,
+          "diffLo": -0.271,
+          "diffHi": 1.5235
+        },
+        "noHormoneTherapy": {
+          "n": 1745,
+          "nPre": 1107,
+          "nPost": 638,
+          "p": 0.1514,
+          "suppressed": false,
+          "diff": 0.7891,
+          "diffLo": -0.3,
+          "diffHi": 1.8781
+        }
+      },
+      "byRace": {
+        "Asian (non-Hispanic)": {
+          "n": 278,
+          "nPre": 184,
+          "nPost": 94,
+          "p": 0.4948,
+          "suppressed": false,
+          "diff": -0.2837,
+          "diffLo": -1.1137,
+          "diffHi": 0.5464
+        },
+        "Black (non-Hispanic)": {
+          "n": 403,
+          "nPre": 254,
+          "nPost": 149,
+          "p": 0.6005,
+          "suppressed": false,
+          "diff": 0.2836,
+          "diffLo": -0.7995,
+          "diffHi": 1.3667
+        },
+        "Hispanic": {
+          "n": 539,
+          "nPre": 324,
+          "nPost": 215,
+          "p": 0.7148,
+          "suppressed": false,
+          "diff": 0.2562,
+          "diffLo": -1.1474,
+          "diffHi": 1.6599
+        },
+        "Other / multiracial": {
+          "n": 60,
+          "nPre": 38,
+          "nPost": 22,
+          "suppressed": true
+        },
+        "White (non-Hispanic)": {
+          "n": 626,
+          "nPre": 357,
+          "nPost": 269,
+          "p": 0.1642,
+          "suppressed": false,
+          "diff": 0.8188,
+          "diffLo": -0.3475,
+          "diffHi": 1.9851
+        }
+      },
+      "raceInteractionP": 0.6022,
+      "significant": false
+    },
+    {
+      "key": "fn_bmd",
+      "label": "Femoral-neck bone density",
+      "kind": "continuous",
+      "definition": "g/cm²",
+      "crude": {
+        "pre": {
+          "est": 0.8248,
+          "lo": 0.8106,
+          "hi": 0.839,
+          "se": 0.0071
+        },
+        "post": {
+          "est": 0.736,
+          "lo": 0.7235,
+          "hi": 0.7484,
+          "se": 0.0062
+        }
+      },
+      "adjusted": {
+        "n": 833,
+        "nPre": 428,
+        "nPost": 405,
+        "p": 0.0018,
+        "suppressed": false,
+        "diff": -0.0563,
+        "diffLo": -0.0905,
+        "diffHi": -0.0221,
+        "q": 0.0145
+      },
+      "sensitivity": {
+        "unadjusted": {
+          "n": 839,
+          "nPre": 431,
+          "nPost": 408,
+          "p": 0.0,
+          "suppressed": false,
+          "diff": -0.0888,
+          "diffLo": -0.1094,
+          "diffHi": -0.0683
+        },
+        "plusSocial": {
+          "n": 758,
+          "nPre": 394,
+          "nPost": 364,
+          "p": 0.0069,
+          "suppressed": false,
+          "diff": -0.0488,
+          "diffLo": -0.0835,
+          "diffHi": -0.0141
+        },
+        "age45to55": {
+          "n": 455,
+          "nPre": 231,
+          "nPost": 224,
+          "p": 0.015,
+          "suppressed": false,
+          "diff": -0.0476,
+          "diffLo": -0.0855,
+          "diffHi": -0.0097
+        },
+        "noHormoneTherapy": {
+          "n": 750,
+          "nPre": 407,
+          "nPost": 343,
+          "p": 0.0013,
+          "suppressed": false,
+          "diff": -0.0617,
+          "diffLo": -0.0979,
+          "diffHi": -0.0255
+        }
+      },
+      "byRace": {
+        "Asian (non-Hispanic)": {
+          "n": 124,
+          "nPre": 62,
+          "nPost": 62,
+          "p": 0.0021,
+          "suppressed": false,
+          "diff": -0.0795,
+          "diffLo": -0.1287,
+          "diffHi": -0.0303
+        },
+        "Black (non-Hispanic)": {
+          "n": 149,
+          "nPre": 83,
+          "nPost": 66,
+          "p": 0.0979,
+          "suppressed": false,
+          "diff": -0.0659,
+          "diffLo": -0.1444,
+          "diffHi": 0.0126
+        },
+        "Hispanic": {
+          "n": 224,
+          "nPre": 104,
+          "nPost": 120,
+          "p": 0.0078,
+          "suppressed": false,
+          "diff": -0.0655,
+          "diffLo": -0.1128,
+          "diffHi": -0.0181
+        },
+        "Other / multiracial": {
+          "n": 23,
+          "nPre": 10,
+          "nPost": 13,
+          "suppressed": true
+        },
+        "White (non-Hispanic)": {
+          "n": 313,
+          "nPre": 169,
+          "nPost": 144,
+          "p": 0.0179,
+          "suppressed": false,
+          "diff": -0.0506,
+          "diffLo": -0.0921,
+          "diffHi": -0.0091
+        }
+      },
+      "raceInteractionP": 0.3799,
+      "significant": true
+    }
+  ],
+  "missing": {
+    "overall": {
+      "bmi": 0.0118,
+      "smoker": 0.0,
+      "sbp": 0.0283,
+      "phq9": 0.0062,
+      "sleep_trouble": 0.0015,
+      "short_sleep": 0.0021,
+      "fn_bmd": 0.5677
+    },
+    "byRace": {
+      "Asian (non-Hispanic)": {
+        "n": 282,
+        "bmi": 0.0035,
+        "smoker": 0.0,
+        "sbp": 0.0461,
+        "phq9": 0.0106,
+        "sleep_trouble": 0.0035,
+        "short_sleep": 0.0,
+        "fn_bmd": 0.5603
+      },
+      "Black (non-Hispanic)": {
+        "n": 412,
+        "bmi": 0.0097,
+        "smoker": 0.0,
+        "sbp": 0.0243,
+        "phq9": 0.0121,
+        "sleep_trouble": 0.0024,
+        "short_sleep": 0.0024,
+        "fn_bmd": 0.6383
+      },
+      "Hispanic": {
+        "n": 555,
+        "bmi": 0.0252,
+        "smoker": 0.0,
+        "sbp": 0.0288,
+        "phq9": 0.0036,
+        "sleep_trouble": 0.0,
+        "short_sleep": 0.0018,
+        "fn_bmd": 0.5856
+      },
+      "Other / multiracial": {
+        "n": 60,
+        "bmi": 0.0,
+        "smoker": 0.0,
+        "sbp": 0.0333,
+        "phq9": 0.0,
+        "sleep_trouble": 0.0,
+        "short_sleep": 0.0,
+        "fn_bmd": 0.6167
+      },
+      "White (non-Hispanic)": {
+        "n": 632,
+        "bmi": 0.0063,
+        "smoker": 0.0,
+        "sbp": 0.0222,
+        "phq9": 0.0032,
+        "sleep_trouble": 0.0016,
+        "short_sleep": 0.0032,
+        "fn_bmd": 0.5047
+      }
+    }
+  },
+  "suppressionRule": "Estimates from fewer than 50 women in either group or fewer than 10 events are suppressed.",
+  "limitations": [
+    "Cross-sectional: shows associations at one point in time, not that menopause causes these changes.",
+    "Menopause status is self-reported; perimenopause cannot be identified in NHANES, so 'pre' includes some women already in the transition.",
+    "Age and menopause are closely linked; results are adjusted for age but residual confounding is possible.",
+    "Hot flashes and night sweats are not measured in NHANES 2013–2018.",
+    "Bone density uses 2013–14 and 2017–18 only (no femur scan in 2015–16).",
+    "Complete-case analysis; see the missing-data table for how missingness differs by group."
+  ],
+  "ethics": [
+    "Uses public, de-identified government data under NCHS terms; only aggregate estimates ship in the app.",
+    "Survey weights make results represent US women, including groups NHANES oversamples (Black, Hispanic, Asian women).",
+    "Race/ethnicity is used to check whether findings hold across groups and is never used to score an individual user.",
+    "Small groups are suppressed to avoid unreliable or re-identifiable estimates."
+  ]
+}

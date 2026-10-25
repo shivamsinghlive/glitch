@@ -6,6 +6,7 @@
  */
 import { z } from "zod";
 import { TONE_GUIDE, type FusedMood } from "./emotion";
+import { evidencePromptBlock } from "./evidence";
 
 export const MealActionSchema = z.object({
   name: z.string().min(1).max(80),
@@ -110,7 +111,7 @@ USER
 - Goal: ${c.goal}${c.lifeStage ? `\n- Life stage: ${c.lifeStage}` : ""}${c.conditions?.length ? `\n- Conditions: ${c.conditions.join(", ")}` : ""}
 - Local time: ${c.localTime}
 - Today so far: ${eaten.cal} kcal, ${eaten.p} g protein${c.calorieTarget ? ` (targets ${c.calorieTarget} kcal / ${c.proteinTarget} g protein)` : ""}
-- Today's meals: ${c.todayMeals.length ? c.todayMeals.map((m) => `${m.type}: ${m.name} (${m.calories} kcal)`).join("; ") : "none logged"}${c.body ? `\n- Body (WHOOP): recovery ${c.body.recovery ?? "?"}%, stress ${c.body.stress ?? "?"}, energy ${c.body.energy ?? "?"}%, sleep ${c.body.sleep ?? "?"}%${c.body.phase ? `, cycle phase ${c.body.phase}` : ""}` : ""}${c.lastCheckIn ? `\n- Last check-in: ${c.lastCheckIn}` : ""}${c.menopause ? `\n- Menopause: ${c.menopause.stage}; ${c.menopause.flashesToday} hot flashes today; ${c.menopause.nightSweatNights14} likely night-sweat nights in 14 days${c.menopause.topTrigger ? `; strongest personal trigger: ${c.menopause.topTrigger}` : ""}. If they mention a hot flash, empathise and suggest cooling strategies (layers, cold water, slow breathing); for treatment questions, encourage a clinician conversation.` : ""}
+- Today's meals: ${c.todayMeals.length ? c.todayMeals.map((m) => `${m.type}: ${m.name} (${m.calories} kcal)`).join("; ") : "none logged"}${c.body ? `\n- Body (WHOOP): recovery ${c.body.recovery ?? "?"}%, stress ${c.body.stress ?? "?"}, energy ${c.body.energy ?? "?"}%, sleep ${c.body.sleep ?? "?"}%${c.body.phase ? `, cycle phase ${c.body.phase}` : ""}` : ""}${c.lastCheckIn ? `\n- Last check-in: ${c.lastCheckIn}` : ""}${c.menopause ? `\n- Menopause: ${c.menopause.stage}; ${c.menopause.flashesToday} hot flashes today; ${c.menopause.nightSweatNights14} possible night-sweat nights in 14 days (estimated from skin temperature + broken sleep; not validated)${c.menopause.topTrigger ? `; strongest personal trigger: ${c.menopause.topTrigger}` : ""}. If they mention a hot flash, empathise; comfort ideas (layers, cool water) are fine but call them comfort, not treatment, and don't present slow breathing as a hot-flash treatment. Evidence-based options to discuss with a clinician are hormone therapy, CBT and non-hormonal prescription medicines. Evidence that alcohol, caffeine or spicy food trigger flashes is mixed: say some women notice it and their own logs will tell.` : ""}
 ${c.hormones ? `- Hormones/contraception (shared with consent): ${c.hormones}\n` : ""}${c.supplements?.length ? `- Supplements: ${c.supplements.join("; ")}\n` : ""}${c.nudges?.length ? `- Things worth gently raising today (appraisal-framed: a manageable challenge, never a failure; at most one per reply, only if relevant): ${c.nudges.join(" | ")}\n` : ""}- Mood read (on-device face/voice/text): ${c.mood ? `${c.mood.label} (from ${c.mood.sources.join("+")})` : "unknown"}
 
 TONE: ${tone}
@@ -130,10 +131,11 @@ MEAL LOGGING
 
 SUPPLEMENTS
 - Know absorption rules: keep iron and calcium (and zinc) 2+ h apart; iron on an empty stomach with vitamin C, away from coffee/tea/dairy; vitamin D/A/E/K and omega-3 with a meal containing fat; levothyroxine on an empty stomach 30–60 min before breakfast and 4 h from calcium/iron. Suggest checking with a pharmacist for medications.
+- Don't recommend blanket vitamin D or calcium doses: USPSTF finds routine low-dose supplements don't prevent fractures in postmenopausal women without osteoporosis. Suggest food first and asking a clinician whether to check vitamin D levels. Don't claim "most people run low".
 
 SYMPTOM & HEALTH LOGGING (voice-first: many users are 45+ and prefer talking to tapping)
 - "I'm having a hot flash" / "had two hot flashes this morning" / "woke up drenched" → log_hot_flash (intensity 1 mild, 2 moderate, 3 severe; night=true for night sweats; count if several).
-- "My blood pressure is 135 over 85" → log_bp. Describe it using the ACC/AHA categories EXACTLY: normal <120 and <80; elevated 120–129 and <80; high (stage 1) 130–139 or 80–89; high (stage 2) ≥140 or ≥90; very high >180 or >120. Never call a reading of 130+ systolic or 80+ diastolic "healthy" or "normal". If very high, tell them to rest and re-measure, and call 911 with chest pain, breathlessness, weakness or vision changes.
+- "My blood pressure is 135 over 85" → log_bp. Describe it using the AHA/ACC (2025) categories EXACTLY: normal <120 and <80; elevated 120–129 and <80; high (stage 1) 130–139 or 80–89; high (stage 2) ≥140 or ≥90; very high >180 or >120. Never call a reading of 130+ systolic or 80+ diastolic "healthy" or "normal". If very high, tell them to rest and re-measure, and call 911 with chest pain, breathlessness, weakness or vision changes.
 - "My period started today" / "got my period yesterday" → log_period_start (date YYYY-MM-DD; omit for today).
 - When they tell you how they feel ("I'm exhausted", "feeling great", "so anxious"), add log_mood (1 very low … 5 great).
 - Confirm warmly in one short sentence; never make them repeat themselves.
@@ -141,6 +143,8 @@ SYMPTOM & HEALTH LOGGING (voice-first: many users are 45+ and prefer talking to 
 SOURCES (citations)
 - When you give a specific health, nutrition, bone, muscle or menopause CLAIM (e.g. "resistance training protects bone density", "aim for ~1g/kg protein", "bone loss speeds up around menopause"), add 1–2 entries to "sources" backing it.
 - ONLY cite reputable domains: nih.gov, pubmed.ncbi.nlm.nih.gov, who.int, cdc.gov, mayoclinic.org, nhs.uk, menopause.org, acog.org, heart.org, health.harvard.edu, uspreventiveservicestaskforce.org, orthoinfo.org. Never invent URLs or cite blogs/social media. If unsure of a real URL, leave "sources" empty.
+- Preferred verified sources (checked PubMed records; use these exact URLs when they match your claim, and don't stretch them to claims they don't support):
+${evidencePromptBlock()}
 - For casual chat (logging a meal, empathy, mood) leave "sources" empty.
 
 SAFETY
@@ -155,7 +159,7 @@ mood_read is YOUR read of their emotional tone from their words (null if neutral
 
 /**
  * Safety net for BP replies: if a logged reading is high but the model's reply sounds reassuring,
- * replace it with guideline-correct wording (ACC/AHA 2017).
+ * replace it with guideline-correct wording (AHA/ACC 2025 categories, unchanged from 2017).
  */
 export function enforceBpSafety(reply: string, actions: CoachAction[], categorize: (s: number, d: number) => string): string {
   const bp = actions.find((a): a is Extract<CoachAction, { type: "log_bp" }> => a.type === "log_bp");
@@ -198,7 +202,7 @@ export function offlineCoachReply(text: string): string {
   if (mood !== null && /\b(i'?m|i am|feel|feeling)\b/.test(t)) actions.push({ type: "log_mood", mood });
 
   const reply = said.length
-    ? `Got it, I ${said.join(" and ")}.${actions.some((a) => a.type === "log_hot_flash") ? " Try some cool water and a few slow breaths." : ""} My full coaching brain is taking a short break, so I'll keep it simple for a minute.`
+    ? `Got it, I ${said.join(" and ")}.${actions.some((a) => a.type === "log_hot_flash") ? " Some cool water may help you feel more comfortable." : ""} My full coaching brain is taking a short break, so I'll keep it simple for a minute.`
     : "My coaching brain is busy right now, so give me a minute. You can still log hot flashes, night sweats, blood pressure or your mood and I'll save them.";
   return JSON.stringify({ reply, actions, sources: [] });
 }

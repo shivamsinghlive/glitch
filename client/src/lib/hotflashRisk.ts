@@ -71,6 +71,20 @@ export function hotflashRisk(i: RiskInputs): RiskResult {
   };
 }
 
+/** Out-of-fold evaluation written by the training script (loosely typed; see "evaluation.method" in the JSON). */
+type ModelEval = { oofAuc: number; oofAucCi95: [number, number]; cvAucMean: number; cvAucSd: number };
+type FeatureSetEval = {
+  comparison: { logisticRegression: ModelEval; gradientBoosting: ModelEval; interceptOnly: ModelEval; rationale: string; lrMinusGbAuc: { estimate: number; ci95: [number, number] } };
+  calibration: { brier: number; brierBaseline: number; slope: number; intercept: number; reliability: { bin: number; n: number; meanPredicted: number; observed: number }[] };
+  fairness: Record<"race" | "education", { finding: string; summary: string; groups: Record<string, Record<string, unknown>> }>;
+};
+const ev = model.evaluation as unknown as { method: string } & { [K in "comparison" | "calibration" | "fairness"]: Record<"base" | "withLabs", unknown> };
+const evalFor = (k: "base" | "withLabs"): FeatureSetEval => ({
+  comparison: ev.comparison[k] as FeatureSetEval["comparison"],
+  calibration: ev.calibration[k] as FeatureSetEval["calibration"],
+  fairness: ev.fairness[k] as FeatureSetEval["fairness"],
+});
+
 export const MODEL_CARD = {
   name: model.name,
   trainedOn: model.trainedOn,
@@ -80,4 +94,5 @@ export const MODEL_CARD = {
   caveat: model.caveat,
   aucBase: model.base.cvAuc,
   aucLabs: model.withLabs.cvAuc,
+  evaluation: { method: ev.method, base: evalFor("base"), withLabs: evalFor("withLabs") },
 };

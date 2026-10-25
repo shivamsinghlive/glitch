@@ -18,6 +18,9 @@ import { useMenopauseInsights } from "@/hooks/useMenopauseInsights";
 import { useMenopauseDashboard } from "@/hooks/useMenopauseDashboard";
 import { bpCategory, ETHNICITY_OPTIONS, SWAN_VMS_YEARS, SWAN_OVERALL_YEARS, type MenoAlert, type Ethnicity } from "@/lib/menopauseSignals";
 import { suggestScreenings, CITATIONS } from "@/lib/boneHealth";
+import { triggerEffect } from "@/lib/menopause";
+import PopulationEvidence from "@/components/PopulationEvidence";
+import EvidenceSource from "@/components/EvidenceSource";
 
 // WHOOP-inspired palette (surfaces come from CSS tokens so light/dark both work)
 const BG = "var(--app-bg)";
@@ -160,6 +163,7 @@ export default function MenopauseHome({ onTalk }: { onTalk: (prompt?: string) =>
               <motion.p initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                 style={{ overflow: "hidden", fontSize: 13.5, color: "#C9CCD3", lineHeight: 1.5, marginTop: 8, padding: "0 4px" }}>
                 {alerts.find((a) => a.id === openAlert)?.detail}
+                {(() => { const ev = alerts.find((a) => a.id === openAlert)?.evidenceId; return ev ? <> <EvidenceSource id={ev} /></> : null; })()}
               </motion.p>
             )}
           </AnimatePresence>
@@ -185,7 +189,7 @@ export default function MenopauseHome({ onTalk }: { onTalk: (prompt?: string) =>
       ) : (
       <div className="grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 14 }}>
         <Tile label="Night temp" icon="🌡️" value={lastWarm ? `${lastWarm.tempDelta > 0 ? "+" : ""}${lastWarm.tempDelta.toFixed(1)}°` : "—"}
-          pill={lastWarm ? (lastWarm.likely ? { t: "Night sweat", c: RED } : { t: "Normal", c: GREEN }) : null}
+          pill={lastWarm ? (lastWarm.likely ? { t: "Possible sweat", c: RED } : { t: "Normal", c: GREEN }) : null}
           spark={m.warm.slice(-14).map((w) => w.tempDelta)} color={lastWarm?.likely ? RED : TEAL} />
         <Tile label="Blood pressure" icon="🩺" value={lastBp ? `${lastBp.systolic}/${lastBp.diastolic}` : "—"}
           pill={bpCat ? { t: bpCat === "normal" ? "Normal" : bpCat === "elevated" ? "Elevated" : bpCat === "stage1" ? "High · 1" : bpCat === "stage2" ? "High · 2" : "Very high", c: bpCat === "normal" ? GREEN : bpCat === "elevated" || bpCat === "stage1" ? YELLOW : RED } : { t: "Say it", c: MUT }}
@@ -205,6 +209,7 @@ export default function MenopauseHome({ onTalk }: { onTalk: (prompt?: string) =>
         metrics={kind === "cycle" ? ["temp", "recovery", "hrv", "mood"] : ["temp", "flashes", "hrv", "bp", "mood"]} />
 
       {kind !== "cycle" && <ResearchStrip ethnicity={profile.womensHealth?.ethnicity} onSet={(e) => updateWomensHealth({ ethnicity: e })} />}
+      {kind !== "cycle" && <PopulationEvidence />}
 
       {/* Floating mic */}
       <motion.button onClick={() => onTalk()} whileTap={{ scale: 0.9 }} aria-label="Talk to Glitchy"
@@ -222,7 +227,7 @@ function shortTitle(a: MenoAlert) {
   const t = a.title;
   if (/Very high blood/.test(t)) return "BP very high";
   if (/Blood pressure/.test(t)) return "BP high";
-  if (/Night sweats/.test(t)) return t.replace("Night sweats ", "Sweats ").replace(" of the last ", "/").replace(" nights", "");
+  if (/night sweats/i.test(t)) return t.replace(/^(Possible )?night sweats /i, "Sweats? ").replace(" of the last ", "/").replace(" nights", "");
   if (/Broken sleep/.test(t)) return t.replace(" of 7 nights", "/7");
   if (/hot flashes a day/.test(t)) return "Frequent flashes";
   if (/before 40/.test(t)) return "Early (<40)";
@@ -405,13 +410,13 @@ function TrendCard({ days, flashes, warm, bp, moods, hrvBase, metrics }: {
               {metric === "temp" && <ReferenceLine y={0.35} stroke={RED} strokeDasharray="4 4" />}
               {metric === "hrv" && hrvBase && <ReferenceLine y={hrvBase} stroke={MUT} strokeDasharray="4 4" />}
               <Area type="monotone" dataKey={metric} name={chips.find((c) => c[0] === metric)![1]} stroke={color} strokeWidth={2.5} fill="url(#trendFill)" connectNulls dot={false} />
-              {metric === "temp" && metrics.includes("flashes") && <Line dataKey="sweat" name="Night sweat" stroke="none" dot={{ r: 5, fill: RED, stroke: BG, strokeWidth: 2 }} isAnimationActive={false} />}
+              {metric === "temp" && metrics.includes("flashes") && <Line dataKey="sweat" name="Possible night sweat" stroke="none" dot={{ r: 5, fill: RED, stroke: BG, strokeWidth: 2 }} isAnimationActive={false} />}
             </ComposedChart>
           )}
         </ResponsiveContainer>
       </div>
       <p style={{ fontSize: 11.5, color: MUT, marginTop: 4 }}>
-        {metric === "temp" ? (metrics.includes("flashes") ? "🔴 = night sweat (warm skin + broken sleep)" : "Rises ~0.3° after ovulation and stays up until your period") : metric === "bp" ? "Dashed = 130/80" : metric === "hrv" ? "Dashed = your usual" : "Last 4 weeks"}
+        {metric === "temp" ? (metrics.includes("flashes") ? "🔴 = possible night sweat (warm skin + broken sleep; an estimate, not validated)" : "Rises ~0.3° after ovulation and stays up until your period") : metric === "bp" ? "Dashed = 130/80" : metric === "hrv" ? "Dashed = your usual" : "Last 4 weeks"}
       </p>
     </div>
   );
@@ -459,7 +464,7 @@ function ResearchStrip({ ethnicity, onSet }: { ethnicity?: Ethnicity | "prefer_n
           </motion.div>
         )}
       </AnimatePresence>
-      <p style={{ fontSize: 10, color: "#5D626D", marginTop: 6 }}>SWAN · Avis et al., JAMA Intern Med 2015</p>
+      <p style={{ fontSize: 10, color: "#5D626D", marginTop: 6 }}>SWAN · Avis et al., JAMA Intern Med 2015 · group medians, not a prediction for you <EvidenceSource id="swan-vms-duration-by-ethnicity" label="PubMed" /></p>
     </div>
   );
 }
@@ -519,7 +524,8 @@ function DoctorReport({ onClose }: { onClose: () => void }) {
             <tr key={w.label}><td style={{ ...cell, textAlign: "left", fontWeight: 700 }}>{w.label}</td><td style={cell}>{w.flashes}</td><td style={cell}>{w.sweats}</td><td style={cell}>{w.wake}</td><td style={cell}>{w.hrv}</td><td style={cell}>{w.bp}</td><td style={cell}>{w.mood}</td></tr>
           ))}</tbody>
         </table>
-        {m.triggers.length > 0 && <p style={{ fontSize: 13, marginTop: 12 }}><b>Possible triggers:</b> {m.triggers.map((t) => `${t.label} (${t.ratio}×)`).join(", ")}</p>}
+        {m.triggers.length > 0 && <p style={{ fontSize: 13, marginTop: 12 }}><b>Possible triggers (from my logs; association, not proof of cause):</b> {m.triggers.map((t) => `${t.label}: ${triggerEffect(t)}, ${t.days} vs ${t.withoutDays} days, q = ${t.qValue.toFixed(3)}`).join("; ")}</p>}
+        {m.triggersUnclear.length > 0 && <p style={{ fontSize: 12, marginTop: 4, opacity: 0.7 }}>Tested, no clear link yet: {m.triggersUnclear.map((t) => t.label).join(", ")}.</p>}
         {d.alerts.length > 0 && <p style={{ fontSize: 13, marginTop: 6 }}><b>Flags:</b> {d.alerts.map((a) => a.title).join("; ")}</p>}
         <p style={{ fontSize: 13, marginTop: 10, fontWeight: 800 }}>Questions for my doctor</p>
         <ul style={{ paddingLeft: 18, marginTop: 4 }}>{m.clinician.map((c) => <li key={c} style={{ fontSize: 13, marginBottom: 4, lineHeight: 1.45 }}>{c}</li>)}</ul>

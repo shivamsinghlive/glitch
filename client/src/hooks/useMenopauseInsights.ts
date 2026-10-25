@@ -18,7 +18,10 @@ export interface MenopauseInsights {
   demoFlashes: boolean;
   flashesToday: number;
   flashesPerDay14: number;
+  /** Triggers that passed the n-of-1 test (q < 0.10 and 95% CI above 1) */
   triggers: TriggerFinding[];
+  /** Tested (enough days) but no clear link yet — shown so we're honest about uncertainty */
+  triggersUnclear: TriggerFinding[];
   training: MenoTraining;
   lastMrs: MrsResult | null;
   clinician: string[];
@@ -64,7 +67,7 @@ export function useMenopauseInsights(): MenopauseInsights | null {
       : hotFlashLog;
 
     const dayList = Array.from({ length: 30 }, (_, i) => new Date(Date.now() - (29 - i) * 86_400_000).toISOString().slice(0, 10));
-    const triggers = hotFlashTriggers(flashes, [...mealHistory, ...meals, ...demoMeals], stressByDay, warm, dayList);
+    const tested = hotFlashTriggers(flashes, [...mealHistory, ...meals, ...demoMeals], stressByDay, warm, dayList);
     const flashes14 = flashes.filter((f) => f.at.slice(0, 10) >= since14).length;
     const lastWarm = warm[warm.length - 1];
     const lastMrs = mrsLog[mrsLog.length - 1] ?? null;
@@ -73,7 +76,8 @@ export function useMenopauseInsights(): MenopauseInsights | null {
       stage, warm, likelyWarm14, flashes, demoFlashes: useDemo,
       flashesToday: flashes.filter((f) => f.at.slice(0, 10) === today).length,
       flashesPerDay14: +(flashes14 / 14).toFixed(1),
-      triggers,
+      triggers: tested.filter((t) => t.significant),
+      triggersUnclear: tested.filter((t) => !t.significant),
       training: menopauseTraining({ weekday: new Date().getDay(), recovery: h.recovery?.raw ?? null, warmNightLastNight: !!lastWarm && lastWarm.likely && lastWarm.date === h.today?.date, weightKg: profile.weight }),
       lastMrs,
       clinician: clinicianPoints(stage, lastMrs, likelyWarm14),

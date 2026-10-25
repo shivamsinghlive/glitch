@@ -1,7 +1,10 @@
 /**
  * Glitch — Mind & mood analytics
  * - PHQ-2 / GAD-2 brief screeners (Kroenke et al., 2003 / 2007). A score ≥ 3 is a positive screen:
- *   a prompt to talk to a professional, never a diagnosis.
+ *   a prompt to talk to a professional, never a diagnosis. PHQ-2 ≥ 3 is verified (83% sens / 92% spec,
+ *   PMID 14583691). The GAD-2 ≥ 3 cut-point is conventional, but the 2007 abstract (PMID 17339617)
+ *   reports only AUC 0.80–0.91 and no full text was available to verify it, so the user copy stays
+ *   at "suggests… a fuller check" and never states a result.
  * - Links between self-reported mood and WHOOP physiology (sleep, HRV).
  * - Recurring premenstrual mood dips across cycles (a pattern worth raising with a clinician; PMDD
  *   is diagnosed by professionals, not apps).
@@ -84,7 +87,7 @@ export function moodBodyLinks(days: DailyPhysiology[], moods: Map<string, number
     const rest = rows.filter((d) => d.hrv != null && d.hrv >= m - 0.8 * s).map((d) => moods.get(d.date)!);
     if (low.length >= 3 && rest.length >= 3) {
       const diff = +(mean(rest) - mean(low)).toFixed(1);
-      if (diff >= 0.4) links.push({ id: "hrv", diff, message: `On days your HRV is well below normal, your mood is ${diff} points lower. Your body often signals stress before you notice it.` });
+      if (diff >= 0.4) links.push({ id: "hrv", diff, message: `On days your HRV is well below normal, your mood is ${diff} points lower. Low HRV can reflect stress, poor sleep or illness, so it's a pattern worth noticing, not a diagnosis.` });
     }
   }
   return links;
