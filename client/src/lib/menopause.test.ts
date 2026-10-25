@@ -78,3 +78,17 @@ describe("training", () => {
     expect(t.nutrition[0]).toMatch(/84–112 g/);
   });
 });
+
+import { permutationP, benjaminiHochberg } from "./menopause";
+describe("trigger statistics", () => {
+  it("permutation p is small for a clear difference and large for none", () => {
+    expect(permutationP([4, 5, 4, 6, 5], [1, 0, 1, 2, 1, 0, 1])).toBeLessThan(0.02);
+    expect(permutationP([1, 2, 1, 2], [1, 2, 1, 2, 1, 2])).toBeGreaterThan(0.3);
+  });
+  it("Benjamini–Hochberg keeps order and never shrinks below the raw p", () => {
+    const q = benjaminiHochberg([0.01, 0.04, 0.5]);
+    expect(q[0]).toBeLessThanOrEqual(q[1]);
+    expect(q[2]).toBeCloseTo(0.5, 5);
+    q.forEach((v, i) => expect(v).toBeGreaterThanOrEqual([0.01, 0.04, 0.5][i] - 1e-12));
+  });
+});

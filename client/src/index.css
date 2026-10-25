@@ -56,6 +56,8 @@
   --app-bg: #0D0E12;        /* page */
   --app-outer: #07080A;     /* around the phone shell */
   --card-bg: #17191F;       /* cards / tiles */
+  --viz-1: #3987e5;         /* chart series 1 (validated, dark) */
+  --viz-2: #d95926;         /* chart series 2 (validated, dark) */
   --surface-2: #22252D;     /* chips, inputs, inner panels */
   --line: #2A2D36;          /* hairlines / borders */
   --ink: #F4F5F7;           /* primary text */
@@ -115,6 +117,8 @@
   --app-bg: #F7F6F3;        /* warm off-white page */
   --app-outer: #E7E4DD;     /* around the phone shell */
   --card-bg: #FFFFFF;       /* cards / tiles */
+  --viz-1: #2a78d6;         /* chart series 1 (validated, light) */
+  --viz-2: #eb6834;         /* chart series 2 (validated, light) */
   --surface-2: #EFEDE8;     /* chips, inputs, inner panels */
   --line: #DFDCD4;          /* hairlines / borders */
   --ink: #1C1D21;           /* primary text */

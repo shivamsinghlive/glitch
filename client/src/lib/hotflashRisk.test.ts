@@ -23,3 +23,14 @@ describe("hot-flash risk model", () => {
     expect(MODEL_CARD.aucBase).toBeGreaterThan(0.6);
   });
 });
+
+import { whatIfChanges } from "./hotflashRisk";
+import { describe as d2, it as it2, expect as ex2 } from "vitest";
+d2("whatIfChanges", () => {
+  it2("lowers risk when a modifiable factor is removed, and is empty if none apply", () => {
+    const w = whatIfChanges({ age: 46, smoker: true, bmi: 32, priorSymptoms: true });
+    ex2(w.length).toBe(2);
+    w.forEach((x) => ex2(x.to).toBeLessThan(x.from));
+    ex2(whatIfChanges({ age: 46, smoker: false, bmi: 24, priorSymptoms: true })).toEqual([]);
+  });
+});

@@ -1,0 +1,92 @@
+{
+  "kind": "simulated ground truth (stress test, not clinical validation)",
+  "nightSweat": {
+    "nights": 6780,
+    "prevalence": 0.254,
+    "operating": {
+      "threshold": 0.35,
+      "precision": 0.936,
+      "recall": 0.435,
+      "f1": 0.594,
+      "falseAlarmRate": 0.01
+    },
+    "tempOnly": {
+      "precision": 0.71,
+      "recall": 0.511,
+      "f1": 0.594,
+      "falseAlarmRate": 0.071
+    },
+    "disruptionOnly": {
+      "precision": 0.598,
+      "recall": 0.72,
+      "f1": 0.653,
+      "falseAlarmRate": 0.165
+    },
+    "sweep": [
+      {
+        "threshold": 0.15,
+        "precision": 0.899,
+        "recall": 0.651,
+        "falseAlarmRate": 0.025
+      },
+      {
+        "threshold": 0.2,
+        "precision": 0.922,
+        "recall": 0.601,
+        "falseAlarmRate": 0.017
+      },
+      {
+        "threshold": 0.25,
+        "precision": 0.933,
+        "recall": 0.55,
+        "falseAlarmRate": 0.013
+      },
+      {
+        "threshold": 0.3,
+        "precision": 0.938,
+        "recall": 0.488,
+        "falseAlarmRate": 0.011
+      },
+      {
+        "threshold": 0.35,
+        "precision": 0.936,
+        "recall": 0.435,
+        "falseAlarmRate": 0.01
+      },
+      {
+        "threshold": 0.4,
+        "precision": 0.939,
+        "recall": 0.376,
+        "falseAlarmRate": 0.008
+      },
+      {
+        "threshold": 0.45,
+        "precision": 0.94,
+        "recall": 0.328,
+        "falseAlarmRate": 0.007
+      },
+      {
+        "threshold": 0.5,
+        "precision": 0.952,
+        "recall": 0.277,
+        "falseAlarmRate": 0.005
+      },
+      {
+        "threshold": 0.6,
+        "precision": 0.946,
+        "recall": 0.183,
+        "falseAlarmRate": 0.004
+      }
+    ]
+  },
+  "ovulation": {
+    "cycles": 600,
+    "ovulatory": 509,
+    "anovulatory": 91,
+    "sensitivity": 0.886,
+    "specificity": 0.923,
+    "meanAbsErrorDays": 1,
+    "within1Day": 0.774,
+    "within2Days": 0.896
+  }
+}

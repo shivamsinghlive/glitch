@@ -1,4 +1,4 @@
 {
-  "source": "default \"3 over 6\" fertility-awareness rule; not yet tuned (run scripts/validate_ovulation_mcphases.ts with mcPHASES access)",
+  "source": "default \"3 over 6\" fertility-awareness rule. Evaluated on simulated cycles with known ovulation (see detectorEvaluation.json). Not yet tuned on real hormone-confirmed data: mcPHASES (PhysioNet) needs a signed data use agreement, see scripts/validate_ovulation_mcphases.ts.",
   "params": {}
 }

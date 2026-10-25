@@ -14,6 +14,7 @@ import { useHealthInsights } from "@/hooks/useHealthInsights";
 import { useMenopauseInsights } from "@/hooks/useMenopauseInsights";
 import { MRS_ITEMS, MRS_OPTIONS, scoreMrs, type MenoStage } from "@/lib/menopause";
 import HotflashRiskCard from "./HotflashRiskCard";
+import ModelEvidenceCard from "./ModelEvidenceCard";
 
 const INK = "var(--ink)";
 const MUTED = "var(--txt-muted)";
@@ -115,6 +116,7 @@ export default function MenopausePanel() {
       </div>
 
       <HotflashRiskCard hasLoggedFlashes={m.flashes.length > 0 && !m.demoFlashes} />
+      <ModelEvidenceCard />
 
       {/* Warm nights */}
       <div style={card}>

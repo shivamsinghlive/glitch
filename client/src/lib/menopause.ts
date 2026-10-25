@@ -127,7 +127,8 @@ export interface WarmNight {
 }
 
 /** Each night's skin-temp delta vs the previous 14-night median; "likely" when ≥ +0.35 °C with disruption. */
-export function warmNights(days: DailyPhysiology[]): WarmNight[] {
+export function warmNights(days: DailyPhysiology[], opts: { tempThreshold?: number } = {}): WarmNight[] {
+  const tempThreshold = opts.tempThreshold ?? 0.35;
   const out: WarmNight[] = [];
   days.forEach((d, i) => {
     if (d.skinTemp == null || i < 7) return;
@@ -139,7 +140,7 @@ export function warmNights(days: DailyPhysiology[]): WarmNight[] {
     const disrupted = (d.disturbances != null && priorDist.length >= 5 && d.disturbances >= mean(priorDist) + 3)
       || (d.sleepEfficiency != null && d.sleepEfficiency < 82)
       || (d.sleepPerformance != null && d.sleepPerformance < 68);
-    out.push({ date: d.date, tempDelta: delta, likely: delta >= 0.35 && disrupted });
+    out.push({ date: d.date, tempDelta: delta, likely: delta >= tempThreshold && disrupted });
   });
   return out;
 }
@@ -167,15 +168,49 @@ export interface TriggerFinding {
   withoutAvg: number;
   ratio: number;
   days: number;             // trigger days observed
+  /** One-sided permutation-test p-value for "more flashes on trigger days" */
+  pValue: number;
+  /** Benjamini–Hochberg adjusted p-value across every trigger tested */
+  qValue: number;
 }
 
 const TRIGGER_LABEL: Record<TriggerKey, string> = {
   alcohol: "Alcohol", caffeine: "Caffeine", spicy: "Spicy food", late_meal: "Eating after 8 pm", high_stress: "High-stress days", warm_night: "After a warm night",
 };
 
+/** One-sided permutation test: how often does shuffling day labels give a mean difference at least this big? */
+export function permutationP(withVals: number[], withoutVals: number[], perms = 2000, seed = 17): number {
+  const all = [...withVals, ...withoutVals];
+  const n = withVals.length;
+  const observed = mean(withVals) - mean(withoutVals);
+  let s = seed >>> 0;
+  const rand = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
+  let extreme = 0;
+  const pool = all.slice();
+  for (let p = 0; p < perms; p++) {
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    if (mean(pool.slice(0, n)) - mean(pool.slice(n)) >= observed - 1e-12) extreme++;
+  }
+  return (extreme + 1) / (perms + 1);
+}
+
+/** Benjamini–Hochberg false-discovery-rate adjustment. Returns q-values in the input order. */
+export function benjaminiHochberg(ps: number[]): number[] {
+  const order = ps.map((p, i) => [p, i] as const).sort((a, b) => a[0] - b[0]);
+  const q = new Array<number>(ps.length);
+  let prev = 1;
+  for (let k = order.length - 1; k >= 0; k--) {
+    prev = Math.min(prev, (order[k][0] * order.length) / (k + 1));
+    q[order[k][1]] = prev;
+  }
+  return q;
+}
+
 /**
  * Compare hot-flash frequency on days with vs without each trigger. Needs ≥3 trigger days and
- * ≥3 non-trigger days, and a ≥1.5× difference, before calling something a trigger.
+ * ≥3 non-trigger days. A trigger is reported only if the difference is ≥1.5× AND survives a
+ * permutation test with Benjamini–Hochberg correction across all six candidates (q ≤ 0.10),
+ * so a lucky streak of three bad days is not mistaken for a pattern.
  */
 export function hotFlashTriggers(
   flashes: HotFlash[],
@@ -203,15 +238,21 @@ export function hotFlashTriggers(
     warm_night: (d) => warmSet.has(d),
   };
 
-  const findings: TriggerFinding[] = [];
+  const tested: { k: TriggerKey; w: number; wo: number; ratio: number; days: number; p: number }[] = [];
   (Object.keys(has) as TriggerKey[]).forEach((k) => {
     const withD = dayList.filter(has[k]);
     const withoutD = dayList.filter((d) => !has[k](d));
     if (withD.length < 3 || withoutD.length < 3) return;
-    const w = mean(withD.map((d) => flashCount.get(d) ?? 0));
-    const wo = mean(withoutD.map((d) => flashCount.get(d) ?? 0));
+    const wv = withD.map((d) => flashCount.get(d) ?? 0), wov = withoutD.map((d) => flashCount.get(d) ?? 0);
+    const w = mean(wv), wo = mean(wov);
     const ratio = wo > 0 ? w / wo : w > 0 ? 9 : 1;
-    if (ratio >= 1.5 && w - wo >= 0.5) findings.push({ trigger: k, label: TRIGGER_LABEL[k], withAvg: +w.toFixed(1), withoutAvg: +wo.toFixed(1), ratio: +ratio.toFixed(1), days: withD.length });
+    tested.push({ k, w, wo, ratio, days: withD.length, p: permutationP(wv, wov) });
+  });
+  const q = benjaminiHochberg(tested.map((t) => t.p));
+  const findings: TriggerFinding[] = [];
+  tested.forEach((t, i) => {
+    if (t.ratio >= 1.5 && t.w - t.wo >= 0.5 && q[i] <= 0.1)
+      findings.push({ trigger: t.k, label: TRIGGER_LABEL[t.k], withAvg: +t.w.toFixed(1), withoutAvg: +t.wo.toFixed(1), ratio: +t.ratio.toFixed(1), days: t.days, pValue: +t.p.toFixed(3), qValue: +q[i].toFixed(3) });
   });
   return findings.sort((a, b) => b.ratio - a.ratio);
 }

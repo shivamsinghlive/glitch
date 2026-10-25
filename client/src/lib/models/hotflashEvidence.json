@@ -1,0 +1,83 @@
+{
+  "dataset": "TSHS Hot Flashes (n=375)",
+  "cvScheme": "5-fold stratified, repeated 20 times",
+  "auc": 0.727,
+  "aucBootstrap95": [
+    0.643,
+    0.757
+  ],
+  "baselineAuc": 0.5,
+  "brier": 0.182,
+  "brierBaseline": 0.216,
+  "calibration": [
+    {
+      "predicted": 0.121,
+      "observed": 0.16,
+      "n": 75
+    },
+    {
+      "predicted": 0.151,
+      "observed": 0.133,
+      "n": 75
+    },
+    {
+      "predicted": 0.228,
+      "observed": 0.253,
+      "n": 75
+    },
+    {
+      "predicted": 0.479,
+      "observed": 0.48,
+      "n": 75
+    },
+    {
+      "predicted": 0.596,
+      "observed": 0.547,
+      "n": 75
+    }
+  ],
+  "fairness": {
+    "protectedFeaturesUsed": false,
+    "groups": [
+      {
+        "attribute": "race",
+        "group": "Not African American",
+        "n": 193,
+        "observedRate": 0.249,
+        "meanPredicted": 0.259,
+        "auc": 0.692
+      },
+      {
+        "attribute": "race",
+        "group": "African American",
+        "n": 182,
+        "observedRate": 0.385,
+        "meanPredicted": 0.374,
+        "auc": 0.719
+      },
+      {
+        "attribute": "education",
+        "group": "Lower education",
+        "n": 39,
+        "observedRate": 0.513,
+        "meanPredicted": 0.474,
+        "auc": 0.592
+      },
+      {
+        "attribute": "education",
+        "group": "Higher education",
+        "n": 336,
+        "observedRate": 0.292,
+        "meanPredicted": 0.297,
+        "auc": 0.722
+      }
+    ],
+    "aucGapMax": {
+      "race": 0.027,
+      "education": 0.13
+    },
+    "aucWithProtectedFeatures": 0.719,
+    "note": "Race and education are excluded from the model. Subgroup AUC and calibration are checked anyway. Subgroups are small, so differences are indicative, not conclusive."
+  },
+  "labsAuc": 0.748
+}

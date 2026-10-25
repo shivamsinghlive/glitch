@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
-import { hotflashRisk, MODEL_CARD } from "@/lib/hotflashRisk";
+import { hotflashRisk, whatIfChanges, MODEL_CARD } from "@/lib/hotflashRisk";
 
 const INK = "var(--ink)";
 const MUTED = "var(--txt-muted)";
@@ -24,6 +24,7 @@ export default function HotflashRiskCard({ hasLoggedFlashes }: { hasLoggedFlashe
   const lastMrs = mrsLog[mrsLog.length - 1];
   const priorSymptoms = wh.priorMenoSymptoms ?? (hasLoggedFlashes || (lastMrs ? lastMrs.somatic > 0 : false));
   const r = hotflashRisk({ age: profile.age, smoker: !!wh.smoker, bmi, priorSymptoms, fsh: wh.labs?.fsh, estradiol: wh.labs?.estradiol });
+  const whatIf = whatIfChanges({ age: profile.age, smoker: !!wh.smoker, bmi, priorSymptoms, fsh: wh.labs?.fsh, estradiol: wh.labs?.estradiol });
   const pct = Math.round(r.probability * 100);
   const base = Math.round(r.prevalence * 100);
   const color = r.relative === "higher" ? HEAT : r.relative === "lower" ? SAGE: "oklch(0.70 0.12 75)";
@@ -81,6 +82,14 @@ export default function HotflashRiskCard({ hasLoggedFlashes }: { hasLoggedFlashe
         <p style={{ fontSize: 12, color: INK, fontFamily: font, marginTop: 10, padding: "8px 10px", borderRadius: 10, background: "oklch(0.60 0.10 148 / 0.10)" }}>
           🌱 {r.factors.filter((f) => f.present && f.modifiable).map((f) => f.label.toLowerCase()).join(" and ")} {r.factors.filter((f) => f.present && f.modifiable).length > 1 ? "are" : "is"} linked to more hot flashes, and {r.factors.filter((f) => f.present && f.modifiable).length > 1 ? "both are" : "it's"} something you can change. Your Glitch plan already targets this.
         </p>
+      )}
+
+      {whatIf.length > 0 && (
+        <div style={{ marginTop: 8, fontSize: 12, color: INK, fontFamily: font, lineHeight: 1.5 }}>
+          {whatIf.map((w) => (
+            <p key={w.label}>🔮 <b>What if</b> you {w.label}? The model's estimate moves from <b>{Math.round(w.from * 100)}%</b> to <b>{Math.round(w.to * 100)}%</b>. <span style={{ color: MUTED }}>(Association in a 2001 cohort, not a promise.)</span></p>
+          ))}
+        </div>
       )}
 
       <button onClick={() => setShowCard((v) => !v)} style={{ marginTop: 10, border: "none", background: "transparent", color: MUTED, fontWeight: 600, fontSize: 11.5, fontFamily: font, padding: 0 }}>

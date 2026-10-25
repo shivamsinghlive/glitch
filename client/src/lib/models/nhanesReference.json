@@ -1,0 +1,156 @@
+{
+  "source": "NHANES 2017-2018 (CDC NCHS), women 35-79, survey-weighted",
+  "url": "https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?BeginYear=2017",
+  "note": "Context only. Clinic readings differ from home readings; sleep is self-reported weekday sleep.",
+  "percentiles": [
+    5,
+    10,
+    25,
+    50,
+    75,
+    90,
+    95
+  ],
+  "bands": [
+    {
+      "ageMin": 35,
+      "ageMax": 44,
+      "nBp": 408,
+      "nSleep": 455,
+      "systolicPercentiles": {
+        "5": 95.7,
+        "10": 98.6,
+        "25": 104.0,
+        "50": 114.0,
+        "75": 124.0,
+        "90": 132.0,
+        "95": 140.7
+      },
+      "diastolicPercentiles": {
+        "5": 58.0,
+        "10": 60.4,
+        "25": 67.0,
+        "50": 73.0,
+        "75": 79.0,
+        "90": 84.9,
+        "95": 92.0
+      },
+      "sleepHoursPercentiles": {
+        "5": 5.0,
+        "10": 6.0,
+        "25": 7.0,
+        "50": 7.5,
+        "75": 8.5,
+        "90": 9.0,
+        "95": 10.0
+      },
+      "shareBpAtOrAbove130_80": 0.259,
+      "shareSleepUnder6h": 0.093
+    },
+    {
+      "ageMin": 45,
+      "ageMax": 54,
+      "nBp": 387,
+      "nSleep": 424,
+      "systolicPercentiles": {
+        "5": 97.0,
+        "10": 102.3,
+        "25": 109.0,
+        "50": 121.0,
+        "75": 133.0,
+        "90": 142.0,
+        "95": 148.0
+      },
+      "diastolicPercentiles": {
+        "5": 57.2,
+        "10": 62.0,
+        "25": 67.0,
+        "50": 75.0,
+        "75": 82.0,
+        "90": 90.0,
+        "95": 94.0
+      },
+      "sleepHoursPercentiles": {
+        "5": 5.0,
+        "10": 6.0,
+        "25": 7.0,
+        "50": 7.5,
+        "75": 8.0,
+        "90": 9.0,
+        "95": 10.0
+      },
+      "shareBpAtOrAbove130_80": 0.404,
+      "shareSleepUnder6h": 0.069
+    },
+    {
+      "ageMin": 55,
+      "ageMax": 64,
+      "nBp": 548,
+      "nSleep": 587,
+      "systolicPercentiles": {
+        "5": 103.0,
+        "10": 104.0,
+        "25": 114.0,
+        "50": 126.0,
+        "75": 139.0,
+        "90": 153.0,
+        "95": 165.1
+      },
+      "diastolicPercentiles": {
+        "5": 60.0,
+        "10": 62.0,
+        "25": 67.0,
+        "50": 74.0,
+        "75": 80.0,
+        "90": 87.0,
+        "95": 91.0
+      },
+      "sleepHoursPercentiles": {
+        "5": 5.0,
+        "10": 5.9,
+        "25": 6.5,
+        "50": 7.5,
+        "75": 8.5,
+        "90": 9.0,
+        "95": 9.5
+      },
+      "shareBpAtOrAbove130_80": 0.482,
+      "shareSleepUnder6h": 0.1
+    },
+    {
+      "ageMin": 65,
+      "ageMax": 79,
+      "nBp": 468,
+      "nSleep": 513,
+      "systolicPercentiles": {
+        "5": 108.0,
+        "10": 111.5,
+        "25": 121.0,
+        "50": 130.0,
+        "75": 149.0,
+        "90": 165.0,
+        "95": 177.0
+      },
+      "diastolicPercentiles": {
+        "5": 50.0,
+        "10": 55.0,
+        "25": 61.0,
+        "50": 69.0,
+        "75": 75.0,
+        "90": 82.0,
+        "95": 86.0
+      },
+      "sleepHoursPercentiles": {
+        "5": 5.3,
+        "10": 6.0,
+        "25": 7.0,
+        "50": 8.0,
+        "75": 9.0,
+        "90": 9.5,
+        "95": 10.0
+      },
+      "shareBpAtOrAbove130_80": 0.525,
+      "shareSleepUnder6h": 0.058
+    }
+  ]
+}

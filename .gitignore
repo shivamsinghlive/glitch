@@ -118,3 +118,5 @@ client/public/__manus__/version.json
 # Third-party datasets (download via scripts; never commit raw data)
 scripts/data/
 .venv/
+
+__pycache__/

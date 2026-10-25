@@ -81,3 +81,14 @@ export const MODEL_CARD = {
   aucBase: model.base.cvAuc,
   aucLabs: model.withLabs.cvAuc,
 };
+
+export interface WhatIf { label: string; from: number; to: number }
+
+/** "What if" for the changeable factors: the modelled risk if smoking stopped or BMI dropped below 30. */
+export function whatIfChanges(i: RiskInputs): WhatIf[] {
+  const now = hotflashRisk(i).probability;
+  const out: WhatIf[] = [];
+  if (i.smoker) out.push({ label: "stopped smoking", from: now, to: hotflashRisk({ ...i, smoker: false }).probability });
+  if (i.bmi >= 30) out.push({ label: "BMI under 30", from: now, to: hotflashRisk({ ...i, bmi: 29.9 }).probability });
+  return out;
+}
